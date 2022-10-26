@@ -1,4 +1,5 @@
 import 'package:buroleave/ui/MyCalendar.dart';
+import 'package:buroleave/ui/createDrawer.dart';
 import 'package:buroleave/ui/mycountry.dart';
 import 'package:country_state_city_picker/country_state_city_picker.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,9 @@ import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 //Class start here
 
 class FormScreen extends StatefulWidget {
+    static const String routeName = '/applyleave';
+
+  const FormScreen({super.key});
   @override
   State<StatefulWidget> createState() {
     return FormScreenState();
@@ -16,6 +20,7 @@ class FormScreen extends StatefulWidget {
 
 class FormScreenState extends State<FormScreen> {
 //special R&D
+  // ignore: unnecessary_new
   DateTimeRange dtrange = new DateTimeRange(
       start: DateTime(2022, 11, 5), end: DateTime(2022, 12, 5));
 
@@ -61,29 +66,6 @@ class FormScreenState extends State<FormScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
 //  Date range fucntions
-  void _onSelectionChanged(DateRangePickerSelectionChangedArgs args) {
-    setState(() {
-      //DateFormat.yMMMd().format(DateTime.now())
-      if (args.value is PickerDateRange) {
-        _range = '${DateFormat.yMMMd().format(args.value.startDate)} -'
-            ' ${DateFormat.yMMMd().format(args.value.endDate ?? args.value.startDate)}';
-      } else if (args.value is DateTime) {
-        _selectedDate = args.value.toString();
-      } else if (args.value is List<DateTime>) {
-        _dateCount = args.value.length.toString();
-      } else {
-        _rangeCount = args.value.length.toString();
-      }
-      DateTime date1 =
-          DateTime.parse(DateFormat.yMMMd().format(args.value.startDate));
-      firstdate = date1;
-      DateTime date2 =
-          DateTime.parse(DateFormat.yMMMd().format(args.value.endDate));
-      seconddate = date2;
-      // Duration diff = date1.difference(date2);
-      // _diff = diff.inDays.toString();
-    });
-  }
 //Date range Function
 
 //The below code is responsible for fetching leave sample Data
@@ -361,12 +343,12 @@ class FormScreenState extends State<FormScreen> {
               children: <Widget>[
                 _buildDropdowndown(),
                 _buildDayRemain(),
-                _buildParking(),
+                // _buildParking(),
                 // _buildDateRangeCalendar(),
                  _buildsmartCalendar(),
                 _buildReasons(),
-                _buildDepartnamename(),
-                _buildDropdowndownforDelegateuserlist(),
+                // _buildDepartnamename(),
+                // _buildDropdowndownforDelegateuserlist(),
                 _builderStateCity(),
                 _buildcheckterms(),
 
@@ -376,7 +358,7 @@ class FormScreenState extends State<FormScreen> {
                 //_buildCalories(),
                 SizedBox(height: 100),
                 ElevatedButton(
-                  child: Text(
+                  child: const Text(
                     'Submit',
                     style: TextStyle(
                         color: Color.fromARGB(255, 52, 0, 134), fontSize: 16),
@@ -412,8 +394,9 @@ class FormScreenState extends State<FormScreen> {
           ),
         ),
       ),
+        drawer: createDrawer(context),
     );
   }
 }
 
-class CSCPicker {}
+
