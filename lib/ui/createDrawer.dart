@@ -10,7 +10,7 @@ Widget createDrawer(BuildContext context) {
         color: Theme.of(context).canvasColor,
         child: DrawerHeader(
           child: Text(
-            'Navigation Drawer',
+            'Menu',
             style: TextStyle(
               fontSize: 20,
             ),
@@ -40,6 +40,18 @@ Widget createDrawer(BuildContext context) {
           title: Text('Leave Prediction'),
           onTap: () {
             Navigator.pushReplacementNamed(context, routes.categories);
+          }),
+      ListTile(
+          leading: Icon(Icons.movie),
+          title: Text('This Month Movie'),
+          onTap: () {
+            Navigator.pushReplacementNamed(context, routes.movies);
+          }),
+      ListTile(
+          leading: Icon(Icons.computer),
+          title: Text('All Country'),
+          onTap: () {
+            Navigator.pushReplacementNamed(context, routes.countries);
           }),
     ],
   ));

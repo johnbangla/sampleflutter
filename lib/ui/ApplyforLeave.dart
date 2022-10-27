@@ -1,3 +1,4 @@
+import 'package:alert/alert.dart';
 import 'package:buroleave/ui/MyCalendar.dart';
 import 'package:buroleave/ui/createDrawer.dart';
 import 'package:buroleave/ui/mycountry.dart';
@@ -9,7 +10,7 @@ import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 //Class start here
 
 class FormScreen extends StatefulWidget {
-    static const String routeName = '/applyleave';
+  static const String routeName = '/applyleave';
 
   const FormScreen({super.key});
   @override
@@ -32,7 +33,7 @@ class FormScreenState extends State<FormScreen> {
   String? _resons;
   String? _departname;
 
-  String? selectedValue = null; // for leave type
+  String? selectedValueforleavetype = null; // for leave type
   String? selectedValuefordelegateusers = null; // for delegate users
 
 //For date range selection
@@ -58,6 +59,7 @@ class FormScreenState extends State<FormScreen> {
   //for state city
 
   bool isChecked = false;
+  bool showErrorMessage = false;
   String? _diff;
 
   DateTime? firstdate;
@@ -69,7 +71,7 @@ class FormScreenState extends State<FormScreen> {
 //Date range Function
 
 //The below code is responsible for fetching leave sample Data
-  List<DropdownMenuItem<String>> get dropdownItems {
+  List<DropdownMenuItem<String>> get LeaveTypedropdownItems {
     List<DropdownMenuItem<String>> menuItems = [
       DropdownMenuItem(child: Text("Special Leave"), value: "Special Leave"),
       DropdownMenuItem(child: Text("Prov.Staff Leave"), value: "Staff Leave"),
@@ -84,7 +86,7 @@ class FormScreenState extends State<FormScreen> {
   }
 
   //The below code is responsible for fetching Delegate sample Data
-  List<DropdownMenuItem<String>> get dropdownItemsfordelegate {
+  List<DropdownMenuItem<String>> get LeavedelegatedropdownItemsfordelegate {
     List<DropdownMenuItem<String>> menuItems = [
       DropdownMenuItem(child: Text("Shainor"), value: "Shainor"),
       DropdownMenuItem(child: Text("MAmun"), value: "MAmun"),
@@ -108,15 +110,15 @@ class FormScreenState extends State<FormScreen> {
           filled: true,
           fillColor: Colors.blueAccent,
         ),
-        validator: (value) => value == null ? "Select a country" : null,
+        validator: (value) => value == null ? "Select a Leave Type" : null,
         dropdownColor: Colors.blueAccent,
-        value: selectedValue,
+        value: selectedValueforleavetype,
         onChanged: (String? newValue) {
           setState(() {
-            selectedValue = newValue!;
+            selectedValueforleavetype = newValue!;
           });
         },
-        items: dropdownItems);
+        items: LeaveTypedropdownItems);
   }
 
   Widget _buildDayRemain() {
@@ -280,7 +282,7 @@ class FormScreenState extends State<FormScreen> {
             selectedValuefordelegateusers = newValue!;
           });
         },
-        items: dropdownItemsfordelegate);
+        items: LeavedelegatedropdownItemsfordelegate);
   }
 
 //For State country and city
@@ -345,7 +347,7 @@ class FormScreenState extends State<FormScreen> {
                 _buildDayRemain(),
                 // _buildParking(),
                 // _buildDateRangeCalendar(),
-                 _buildsmartCalendar(),
+                _buildsmartCalendar(),
                 _buildReasons(),
                 // _buildDepartnamename(),
                 // _buildDropdowndownforDelegateuserlist(),
@@ -367,24 +369,27 @@ class FormScreenState extends State<FormScreen> {
                     if (!_formKey.currentState!.validate()) {
                       return;
                     }
+                    if (isChecked) {
+                      _formKey.currentState!.save();
 
-                    _formKey.currentState!.save();
+                      //Six fields are manadatory for tracking leave info .
+                      print(selectedValueforleavetype); //Leave type  1
+                      print(_ramainday); //from db        //no  need save
+                      print(_remainparking); //from db    //no need save
+                      print(dtrange.start); //  start date for leave   2
+                      print(dtrange.end); //end date for leave     3
+                      print(dtrange.duration.inDays
+                          .toString()); //No of days of leave +1  4
+                      print(_resons); // Leave Reason a story   5
+                      //print(_departname); //from db   //no need
+                      print(isChecked); //accept term no need
+                      print(
+                          '$countryValue , $stateValue, $cityValue'); //Address of Leave   6
 
-                    print(_ramainday); //from db
-                    print(_remainparking); //from db
-                    print(selectedValue); //from db or not depends
-                    print(_diff); //for calendar
-                    print(_resons);
-                    print(_departname); //from db
-                    print(isChecked);
-                    print('$countryValue , $stateValue, $cityValue');
-
-                    // Duration diff = firstdate.difference(seconddate);
-
-                    // print(_phoneNumber);
-                    // print(_url);
-                    // print(_password);
-                    // print(_calories);
+                    } else {
+                      print('please Accept terms and condistion');
+                      Alert(message: 'please Accept terms and condistion').show();
+                    }
 
                     //Send to API
                   },
@@ -394,9 +399,7 @@ class FormScreenState extends State<FormScreen> {
           ),
         ),
       ),
-        drawer: createDrawer(context),
+      drawer: createDrawer(context),
     );
   }
 }
-
-

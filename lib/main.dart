@@ -1,3 +1,5 @@
+import 'package:buroleave/Pages/list_country.dart';
+import 'package:buroleave/Pages/list_data.dart';
 import 'package:buroleave/ui/leavePredictionView.dart';
 import 'package:buroleave/ui/ApplyforLeave.dart';
 import 'package:buroleave/ui/ReportsView.dart';
@@ -30,7 +32,10 @@ class MyApp extends StatelessWidget {
         routes.categories: (context) => CategoriesView(),
         routes.reports: (context) => ReportsView(),
         routes.applyleave: (context) => FormScreen(),
+        routes.movies:(context) => PopularMovieListPages(),
+        routes.countries:(context) => PopularCountryListPages(),
        },
+       
     );
   }
 }

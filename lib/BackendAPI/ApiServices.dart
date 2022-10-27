@@ -1,89 +1,56 @@
-import 'dart:async';
-import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-Future<Album> fetchAlbum() async {
-  final response = await http
-      .get(Uri.parse('https://jsonplaceholder.typicode.com/albums/1'));
+import '../Models/brands_model.dart';
 
-  if (response.statusCode == 200) {
-    // If the server did return a 200 OK response,
-    // then parse the JSON.
-    return Album.fromJson(jsonDecode(response.body));
-  } else {
-    // If the server did not return a 200 OK response,
-    // then throw an exception.
-    throw Exception('Failed to load album');
+class ApiService {
+  final String baseUrl = "https://localhost:7206";
+  // http http = http();
+
+  Future<List<Brands>?> getBrandss() async {
+    final response = await http.get(Uri.parse('$baseUrl/api/Brands'));
+    if (response.statusCode == 200) {
+      return BrandsFromJson(response.body);
+    } else {
+      return null;
+    }
   }
-}
 
-class Album {
-  final int userId;
-  final int id;
-  final String title;
-
-  const Album({
-    required this.userId,
-    required this.id,
-    required this.title,
-  });
-
-  factory Album.fromJson(Map<String, dynamic> json) {
-    return Album(
-      userId: json['userId'],
-      id: json['id'],
-      title: json['title'],
+  Future<bool> createBrands(Brands data) async {
+    final response = await http.post(Uri.parse('$baseUrl/api/Brands'),
+     
+      headers: {"content-type": "application/json"},
+      body: BrandsToJson(data),
     );
-  }
-}
-
-
-
-class ApiService extends StatefulWidget {
-  const ApiService({super.key});
-
-  @override
-  State<ApiService> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<ApiService> {
-  late Future<Album> futureAlbum;
-
-  @override
-  void initState() {
-    super.initState();
-    futureAlbum = fetchAlbum();
+    if (response.statusCode == 201) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Fetch Data Example',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Fetch Data Example'),
-        ),
-        body: Center(
-          child: FutureBuilder<Album>(
-            future: futureAlbum,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return Text(snapshot.data!.title);
-              } else if (snapshot.hasError) {
-                return Text('${snapshot.error}');
-              }
-
-              // By default, show a loading spinner.
-              return const CircularProgressIndicator();
-            },
-          ),
-        ),
-      ),
+  Future<bool> updateBrands(Brands data) async {
+    final response = await http.put(Uri.parse('$baseUrl/api/Brands/${data.id}'),
+      
+      headers: {"content-type": "application/json"},
+      body: BrandsToJson(data),
     );
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Future<bool> deleteBrands(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/api/Brands/$id'),
+
+      headers: {"content-type": "application/json"},
+    );
+    if (response.statusCode == 204) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

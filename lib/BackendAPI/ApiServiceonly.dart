@@ -1,89 +1,65 @@
-import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:buroleave/Models/country_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-Future<Album> fetchAlbum() async {
-  final response = await http
-      .get(Uri.parse('https://jsonplaceholder.typicode.com/albums/1'));
+import 'package:http_status_code/http_status_code.dart';
 
-  if (response.statusCode == 200) {
-    // If the server did return a 200 OK response,
-    // then parse the JSON.
-    return Album.fromJson(jsonDecode(response.body));
-  } else {
-    // If the server did not return a 200 OK response,
-    // then throw an exception.
-    throw Exception('Failed to load album');
-  }
-}
+import '../Models/movie_model.dart';
 
-class Album {
-  final int userId;
-  final int id;
-  final String title;
+class PopularMovieService {
+  final String apiKey = '8cfb855d7b731341ace5b90889b138a1';
+  final String baseUrl = 'https://api.themoviedb.org/3/movie/popular?api_key=';
+  final String moviebaseUrl =
+      'https://api.themoviedb.org/3/configuration/countries?api_key=';
+//Get All  Movie List
+  Future<List?> getPopularMovies() async {
+    final String url = baseUrl + apiKey;
 
-  const Album({
-    required this.userId,
-    required this.id,
-    required this.title,
-  });
+    http.Response result = await http.get(Uri.parse(url));
+    if (result.statusCode == StatusCode.OK) {
+      if (kDebugMode) {
+        print('Successfully get API key from ${url}');
+      }
+      final jsonResponse = json.decode(result.body);
+      if (kDebugMode) {
+        // print(jsonResponse.toString());
+      }
+      final moviesMap = jsonResponse['results'];
+      List movies = moviesMap.map((movie) => Movie.fromJson(movie)).toList();
 
-  factory Album.fromJson(Map<String, dynamic> json) {
-    return Album(
-      userId: json['userId'],
-      id: json['id'],
-      title: json['title'],
-    );
-  }
-}
-
-
-
-class ApiService extends StatefulWidget {
-  const ApiService({super.key});
-
-  @override
-  State<ApiService> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<ApiService> {
-  late Future<Album> futureAlbum;
-
-  @override
-  void initState() {
-    super.initState();
-    futureAlbum = fetchAlbum();
+      return movies;
+    } else {
+      if (kDebugMode) {
+        print('Failed to get API key from ${url}');
+      }
+      return null;
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Fetch Data Example',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Fetch Data Example'),
-        ),
-        body: Center(
-          child: FutureBuilder<Album>(
-            future: futureAlbum,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return Text(snapshot.data!.title);
-              } else if (snapshot.hasError) {
-                return Text('${snapshot.error}');
-              }
+//Get All COuntry list from the save server
+  Future<List?> getPopularCountries() async {
+    final String url = moviebaseUrl + apiKey;
 
-              // By default, show a loading spinner.
-              return const CircularProgressIndicator();
-            },
-          ),
-        ),
-      ),
-    );
+    http.Response result = await http.get(Uri.parse(url));
+    if (result.statusCode == StatusCode.OK) {
+      if (kDebugMode) {
+        print('Successfully get API key from ${url}');
+      }
+      final jsonResponse = json.decode(result.body);
+      if (kDebugMode) {
+         print(jsonResponse.toString());
+      }
+      final countriesMap = jsonResponse['results'];
+      List countries = countriesMap.map((country) => CountryModel.fromJson(country)).toList();
+
+      return countries;
+    } else {
+      if (kDebugMode) {
+        print('Failed to get API key from ${url}');
+      }
+      return null;
+    }
   }
 }
