@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:buroleave/ui/routes.dart';
+import 'package:buroleave/config/routes.dart';
 
 Widget createDrawer(BuildContext context) {
   return Drawer(

@@ -11,8 +11,9 @@ import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 class FormScreen extends StatefulWidget {
   static const String routeName = '/applyleave';
-
-  const FormScreen({super.key});
+ static route() => MaterialPageRoute(builder: (_) => FormScreen());
+ 
+  // const FormScreen({super.key});
   @override
   State<StatefulWidget> createState() {
     return FormScreenState();
