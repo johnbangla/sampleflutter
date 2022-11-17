@@ -1,14 +1,14 @@
 import 'dart:io';
 
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../app.dart';
 import '../../localization/Language/languages.dart';
 import '../../repository/bloc/change_password/change_pass_cubit.dart';
-import '../../sessionmanager/session_manager.dart';
+import '../../sessionmanager-prev/session_manager.dart';
 import '../../theme/colors.dart';
 import '../../theme/styles.dart';
 import '../../utilities/common_methods.dart';
@@ -266,7 +266,6 @@ class _ChangePasswordState extends State<ChangePassword> with inputValidation {
                             result[0].rawAddress.isNotEmpty) {
                           bloc
                               .submitChangePass(
-                                  false,
                                   oldPassController.text,
                                   newPassController.text,
                                   confirmPassController.text)

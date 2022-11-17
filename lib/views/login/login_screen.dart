@@ -1,25 +1,19 @@
 import 'dart:io';
 
-import 'package:buroleave/repository/network/test_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import 'package:provider/provider.dart';
 import '../../app.dart';
 import '../../localization/Language/languages.dart';
 import '../../repository/bloc/login/login_cubit.dart';
 import '../../repository/network/buro_repository.dart';
-import '../../sessionmanager/session_manager.dart';
+import '../../sessionmanager-prev/session_manager.dart';
 import '../../theme/colors.dart';
 import '../../theme/styles.dart';
-// import '../../utilities/analytics.dart';
 import '../../utilities/common_methods.dart';
-// import '../../widgets/white_text_field.dart';
 import '../../widgets/white_text_field.dart';
 import 'forget_password.dart';
 import 'login_verification.dart';
-
-//import 'package:fluttertoast/fluttertoast.dart';
 
 class LoginScreen extends StatefulWidget {
   static const routeName = '/login';
@@ -36,8 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   late LoginCubit loginBloc;
   bool _isObscure = true;
-  // var repository = BuroRepository();
-  var repository = TestRepository();
+  var repository = BuroRepository();
 
   @override
   void initState() {
@@ -172,92 +165,105 @@ class _LoginScreenState extends State<LoginScreen> {
                               Colors.red);
                         } else {
                           CommonMethods.showLoaderDialog(context);
+                          var token;
                           try {
                             final result =
                                 await InternetAddress.lookup('google.com');
                             if (result.isNotEmpty &&
                                 result[0].rawAddress.isNotEmpty) {
                               loginBloc
-                                  .authenticate(userIdController.text,
+                                  .getToken(userIdController.text,
                                       passwordController.text)
                                   .then((value) => {
-                                        print(
-                                            'In Authenticate ${value.success}'),
-                                        if (value.success)
+                                        token = value.token,
+                                        if (value.token.isNotEmpty)
                                           {
-                                            if (value.data.otpToMobile ==
-                                                    false &&
-                                                value.data.otpToEmail == false)
-                                              {
-                                                sessionManager.setUserID(
-                                                    userIdController.text),
-                                                sessionManager.setPassword(
-                                                    passwordController.text),
-                                                sessionManager
-                                                    .setIsLoggedIn(true),
-                                                repository
-                                                    .getBranchList()
-                                                    .whenComplete(() => {
-                                                          // analytics
-                                                          //     .firebaseAnalytics
-                                                          //     .logEvent(
-                                                          //         name:
-                                                          //             'Login'),
-                                                          //analytics.setUserId(_username);
-                                                          //analytics.setUserProperty(_username);
+                                            loginBloc
+                                                .authenticateWithToken(
+                                                    value.token)
+                                                .then((value) => {
+                                                      if (value.success)
+                                                        {
+                                                          if (value.data
+                                                                      .otpToMobile ==
+                                                                  false &&
+                                                              value.data
+                                                                      .otpToEmail ==
+                                                                  false)
+                                                            {
+                                                              sessionManager
+                                                                  .setUserID(
+                                                                      userIdController
+                                                                          .text),
+                                                              sessionManager
+                                                                  .setPassword(
+                                                                      passwordController
+                                                                          .text),
+                                                              sessionManager
+                                                                  .setIsLoggedIn(
+                                                                      true),
+                                                              repository
+                                                                  .getBranchList()
+                                                                  .whenComplete(
+                                                                      () => {
+                                                                            // analytics.firebaseAnalytics.logEvent(name: 'Login'),
+                                                                            //analytics.setUserId(_username);
+                                                                            //analytics.setUserProperty(_username);
+                                                                            Navigator.pop(context),
+                                                                            Navigator.pushReplacement(
+                                                                                context,
+                                                                                MaterialPageRoute(
+                                                                                    builder: (context) => LandingScreen(
+                                                                                          title: 'BURO Employee',
+                                                                                        ))),
+                                                                          })
+                                                            }
+                                                          else
+                                                            {
+                                                              sessionManager
+                                                                  .setUserID(
+                                                                      userIdController
+                                                                          .text),
+                                                              sessionManager
+                                                                  .setPassword(
+                                                                      passwordController
+                                                                          .text),
+                                                              sessionManager.setToken(
+                                                                      token),
+                                                              // analytics
+                                                              //     .firebaseAnalytics
+                                                              //     .logEvent(
+                                                              //         name:
+                                                              //             'Login'),
+                                                              //analytics.setUserId(_username);
+                                                              //analytics.setUserProperty(_username);
+
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pushNamedAndRemoveUntil(
+                                                                      LoginVerification
+                                                                          .routeName,
+                                                                      (route) =>
+                                                                          false,
+                                                                      arguments:
+                                                                          value),
+                                                            }
+                                                        }
+                                                      else
+                                                        {
                                                           Navigator.pop(
                                                               context),
-                                                          Navigator
-                                                              .pushReplacement(
-                                                                  context,
-                                                                  MaterialPageRoute(
-                                                                      builder: (context) =>
-                                                                          LandingScreen(
-                                                                            title:
-                                                                                'BURO Employee',
-                                                                          ))),
-                                                        })
-                                              }
-                                            else
-                                              {
-                                                sessionManager.setUserID(
-                                                    userIdController.text),
-                                                sessionManager.setPassword(
-                                                    passwordController.text),
-                                                // analytics.firebaseAnalytics
-                                                //     .logEvent(name: 'Login'),
-                                                //analytics.setUserId(_username);
-                                                //analytics.setUserProperty(_username);
-
-                                                Navigator.of(context)
-                                                    .pushNamedAndRemoveUntil(
-                                                        LoginVerification
-                                                            .routeName,
-                                                        (route) => false,
-                                                        arguments: value),
-                                              }
-                                          }
-                                        else
-                                          {
-                                            Navigator.pop(context),
-                                            CommonMethods.showMessage(
-                                                context,
-                                                Languages.of(context)!
-                                                    .somethingWrongText,
-                                                Colors.red),
+                                                          CommonMethods.showMessage(
+                                                              context,
+                                                              Languages.of(
+                                                                      context)!
+                                                                  .somethingWrongText,
+                                                              Colors.red),
+                                                        }
+                                                    })
                                           }
                                       })
-                                  .onError((error, stackTrace) => {
-                                        print(' On error '),
-                                        Navigator.pop(context),
-                                        CommonMethods.showMessage(
-                                            context,
-                                            Languages.of(context)!
-                                                .loginValidationText,
-                                            Colors.red),
-                                      });
-
-                              print('connected');
+                                  .onError((error, stackTrace) => {});
                             }
                           } on SocketException catch (_) {
                             print('not connected');
@@ -267,11 +273,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Languages.of(context)!.internetErrorText,
                                 Colors.red);
                           }
-
-                          // print('In Login');
                         }
-
-                        //Navigator.of(context).pushNamedAndRemoveUntil(LoginVerification.routeName, (route) => false);
                       },
                       child: Container(
                         height: 56,

@@ -7,30 +7,47 @@ import '../../network/buro_repository.dart';
 
 part 'change_pass_state.dart';
 
+// class ChangePasswordCubit extends Cubit<ChangePasswordState> {
+//   final BuroRepository repository;
+//   ChangePasswordCubit(this.repository) : super(ChangePasswordInitialState());
+
+//   Future<ChangePasswordModel?> submitChangePass(bool isForgetPass,
+//       String oldPass, String newPass, String confirmPass) async {
+//     print('Submit Change pass called');
+
+//     emit(ChangePasswordInitialState());
+//     //try {
+//     emit(ChangePasswordLoadingState());
+//     var response = await repository.changePassword(
+//         isForgetPass, oldPass, newPass, confirmPass);
+//     emit(ChangePasswordLoadedState(response));
+//     return response;
+//   }
+// }
 class ChangePasswordCubit extends Cubit<ChangePasswordState> {
   final BuroRepository repository;
   ChangePasswordCubit(this.repository) : super(ChangePasswordInitialState());
 
-  Future<ChangePasswordModel?> submitChangePass(bool isForgetPass,
-      String oldPass, String newPass, String confirmPass) async {
+
+  Future<ChangePasswordModel?> submitChangePass( String oldPass, String newPass, String confirmPass) async {
+
     print('Submit Change pass called');
 
     emit(ChangePasswordInitialState());
-    //try {
-    emit(ChangePasswordLoadingState());
-    var response = await repository.changePassword(
-        isForgetPass, oldPass, newPass, confirmPass);
-    emit(ChangePasswordLoadedState(response));
-    return response;
+    try {
+      emit(ChangePasswordLoadingState());
+      var response = await repository.changePassword( oldPass, newPass, confirmPass);
+      emit(ChangePasswordLoadedState(response));
+      return response;
 
-    /*  } catch (e) {
+
+    } catch (e) {
       print('Home ModuleErrorState ${e.toString()}');
       emit(ChangePasswordErrorState(e));
-    }*/
+    }
   }
 
-  /*void initState(){
-    emit(ChangePasswordInitialState());
-  }*/
+
+
 
 }

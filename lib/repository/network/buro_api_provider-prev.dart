@@ -32,7 +32,29 @@
 // import '../models/sub_module.dart';
 // import '../models/verify_otp.dart';
 
-// class TestApiProvider {
+// class BuroApiProvider {
+//   //This Class is Responsible for Token
+//  Dio networkConfigWithToken(String token) {
+//     var dio = Dio();
+//     dio.options.contentType = Headers.formUrlEncodedContentType;
+
+//     dio.options = BaseOptions(headers: {
+//       'Content-Type': 'application/json',
+//       'Accept': 'application/json',
+//       'Authorization': 'Bearer $token',
+//     }, baseUrl: environments.base_url, receiveDataWhenStatusError: true);
+
+//     /*dio.interceptors.add(
+//       DioLoggingInterceptor(
+//         level: Level.body,
+//         compact: false,
+//       ),
+//     );*/
+//     //dio..interceptors.add(new DialogInterceptor());
+//     //dio.interceptors.add( AuthTokenInterceptor(api));
+//     return dio;
+//   }
+
 //   Dio networkConfigWithAuth(String username, String password) {
 //     var dio = Dio();
 //     dio.options.contentType = Headers.formUrlEncodedContentType;
@@ -74,9 +96,8 @@
 //     var dio = Dio();
 
 //     dio.options.contentType = Headers.formUrlEncodedContentType;
-//     String basicAuth = base64Encode(utf8.encode('$username:$password'));
-//     // String basicAuth =
-//     //     'Basic ' + base64Encode(utf8.encode('$username:$password'));
+//     String basicAuth =
+//         'Basic ' + base64Encode(utf8.encode('$username:$password'));
 //     print("USer NAme $username Password $password");
 
 //     dio.options = BaseOptions(headers: <String, String>{
@@ -94,17 +115,19 @@
 //   }
 
 //   Future<LoginUser> authenticate(String username, String password) async {
-//     final response = await networkConfigWithAuth(username, password).post(
-//       environments.test_login_url,
+//  final response = await networkConfigWithAuth(username, password).post(
+//       // final response = await  networkConfigWithToken(username, password).post(
+    
+//       environments.login_url,
 //       data: {
-//         "loginID": username,
-//         "password": password,
+//         "loginid": username,
+//         "pwd": password,
 //       },
 //     );
 
-//     final mytoken = LoginUser.fromJson(response.data);
-//     print(mytoken);
-//     return mytoken;
+//     final loginUser = LoginUser.fromJson(response.data);
+
+//     return loginUser;
 //   }
 
 //   Future<VerifyOtp> verifyOtp(String mobileOtp, String emailOtp) async {

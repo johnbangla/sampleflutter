@@ -1,7 +1,7 @@
-import 'package:dio/dio.dart';
-
-export 'package:dio/dio.dart';
 import 'dart:convert';
+
+
+import 'package:dio/dio.dart';
 import 'package:dio_logging_interceptor/dio_logging_interceptor.dart';
 
 import '../../sessionmanager/session_manager.dart';
@@ -30,7 +30,13 @@ import '../models/plan_detail_model.dart';
 import '../models/request_cancel.dart';
 import '../models/request_cancel_all.dart';
 import '../models/sub_module.dart';
+import '../models/user_authenticate.dart';
 import '../models/verify_otp.dart';
+import 'DioException.dart';
+
+
+
+export 'package:dio/dio.dart';
 
 class BuroApiProvider {
   Dio networkConfigWithAuth(String username, String password) {
@@ -44,12 +50,53 @@ class BuroApiProvider {
       //'Content-Type': 'application/json'
     }, baseUrl: environments.base_url, receiveDataWhenStatusError: true);
 
-    /*dio.interceptors.add(  // For Print API RESPONSE IN LOG
+    /*dio.interceptors.add(
+      // For Print API RESPONSE IN LOG
       DioLoggingInterceptor(
         level: Level.body,
         compact: false,
       ),
     );*/
+    return dio;
+  }
+
+  Dio networkConfig() {
+    var dio = Dio();
+    dio.options.contentType = Headers.formUrlEncodedContentType;
+
+    dio.options = BaseOptions(
+        headers: <String, String>{},
+        baseUrl: environments.base_url,
+        receiveDataWhenStatusError: true);
+
+   /* dio.interceptors.add(
+      // For Print API RESPONSE IN LOG
+      DioLoggingInterceptor(
+        level: Level.body,
+        compact: false,
+      ),
+    );*/
+    return dio;
+  }
+
+  Dio networkConfigWithToken(String token) {
+    var dio = Dio();
+    dio.options.contentType = Headers.formUrlEncodedContentType;
+
+    dio.options = BaseOptions(headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    }, baseUrl: environments.base_url, receiveDataWhenStatusError: true);
+
+    /*dio.interceptors.add(
+      DioLoggingInterceptor(
+        level: Level.body,
+        compact: false,
+      ),
+    );*/
+    //dio..interceptors.add(new DialogInterceptor());
+    //dio.interceptors.add( AuthTokenInterceptor(api));
     return dio;
   }
 
@@ -60,6 +107,20 @@ class BuroApiProvider {
       key: value,
     }, baseUrl: environments.base_url, receiveDataWhenStatusError: true);
 
+    /*dio.interceptors.add(
+      DioLoggingInterceptor(
+        level: Level.body,
+        compact: false,
+      ),
+    );*/
+    return dio;
+  }
+
+  Dio networkConfigWithoutAuth() {
+    var dio = Dio();
+
+    dio.options = BaseOptions(
+        baseUrl: environments.base_url, receiveDataWhenStatusError: true);
     /* dio.interceptors.add(
       DioLoggingInterceptor(
         level: Level.body,
@@ -83,16 +144,16 @@ class BuroApiProvider {
       headerKey: headerValue,
     }, baseUrl: environments.base_url, receiveDataWhenStatusError: true);
 
-    dio.interceptors.add(
+    /*dio.interceptors.add(
       DioLoggingInterceptor(
         level: Level.body,
         compact: false,
       ),
-    );
+    );*/
     return dio;
   }
 
-  Future<LoginUser> authenticate(String username, String password) async {
+  /*Future<LoginUser> authenticate(String username, String password) async {
     final response = await networkConfigWithAuth(username, password).post(
       environments.login_url,
       data: {
@@ -104,13 +165,14 @@ class BuroApiProvider {
     final loginUser = LoginUser.fromJson(response.data);
 
     return loginUser;
-  }
+  }*/
 
   Future<VerifyOtp> verifyOtp(String mobileOtp, String emailOtp) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
-    final response = await networkConfigWithAuth(user, password).post(
-      environments.verify_otp_url,
+    var token = await sessionManager.token;
+    final response = await networkConfigWithToken(token).post(
+      environments.submit_otp_login,
       data: {
         "mobileOtp": mobileOtp,
         "emailOtp": emailOtp,
@@ -122,20 +184,32 @@ class BuroApiProvider {
     return verifyOtp;
   }
 
+  // After Login In App API collection
+
   Future<Module> getModule() async {
+    print('Get Module called ');
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var module;
+
     try {
-      final response = await networkConfigWithAuth(user, password).get(
-        environments.module_url,
+      final response = await networkConfigWithToken('$token').get(
+        environments.get_module,
       );
-
+      print('Response Status Code ${response.statusCode}');
       //print('RESPONSE ${response.data}');
-
       module = Module.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Module Error state $e');
+    } on DioError catch (e) {
+      print('Get Module on error');
+      final errorMessage = DioException.fromDioError(e).toString();
+
+      if (errorMessage == 'Authentication failed.') {
+        print('Authentication failed error');
+        await getToken(user, password);
+        return getModule();
+      }
+      throw DioException.fromDioError(e);
     }
 
     return module;
@@ -144,15 +218,21 @@ class BuroApiProvider {
   Future<SubModule> getSubModule(String moduleId) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var submodule;
-    try {
-      final response = await networkConfigWithAuth(user, password).get(
-        '${environments.sub_module_url}$moduleId',
-      );
 
+    try {
+      final response = await networkConfigWithToken('$token').get(
+        '${environments.sub_module}$moduleId',
+      );
       submodule = SubModule.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getSubModule(moduleId);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return submodule;
@@ -161,17 +241,22 @@ class BuroApiProvider {
   Future<MyRequest> getMyRequest() async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var requestList;
+
     try {
-      final response = await networkConfigWithAuth(user, password).get(
-        environments.request_url,
+      final response = await networkConfigWithToken('$token').get(
+        environments.my_request_list,
       );
 
-      //print('RESPONSE ${response.data}');
-
       requestList = MyRequest.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getMyRequest();
+      }
+      throw DioException.fromDioError(e);
     }
 
     return requestList;
@@ -180,20 +265,24 @@ class BuroApiProvider {
   Future<MyRequestDetails> getRequestDetails(int applicationId) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
 
     var requestDetailsList;
+
     try {
-      final response = await networkConfigWithAuth(user, password).post(
-        environments.request_details_url,
+      final response = await networkConfigWithToken('$token').post(
+        environments.my_request_details,
         data: {"applicationID": applicationId},
-        //options: Options(contentType: 'multipart/form-data')
       );
 
-      //print('RESPONSE Request Details ${response.data}');
-
       requestDetailsList = MyRequestDetails.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getRequestDetails(applicationId);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return requestDetailsList;
@@ -203,11 +292,13 @@ class BuroApiProvider {
       int appDetailsId, int applicationId) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
 
     var requestCancel;
+
     try {
-      final response = await networkConfigWithAuth(user, password).put(
-        environments.request_cancel_single_url,
+      final response = await networkConfigWithToken('$token').put(
+        environments.my_request_cancel_single,
         data: {
           "appDetailsID": appDetailsId,
           "applicationID": applicationId,
@@ -215,8 +306,13 @@ class BuroApiProvider {
       );
 
       requestCancel = RequestCancel.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return requestCancel(appDetailsId, applicationId);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return requestCancel;
@@ -225,19 +321,26 @@ class BuroApiProvider {
   Future<RequestCancelAll> requestCancelAll(int applicationId) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
 
     var requestCancelAll;
+
     try {
-      final response = await networkConfigWithAuth(user, password).put(
-        environments.request_cancel_all_url,
+      final response = await networkConfigWithToken('$token').put(
+        environments.my_request_cancel_all,
         data: {
           "applicationID": applicationId,
         },
       );
 
       requestCancelAll = RequestCancelAll.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return requestCancelAll(applicationId);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return requestCancelAll;
@@ -246,17 +349,24 @@ class BuroApiProvider {
   Future<ApprovalRequest> getApprovalRequest() async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var requestList;
+
     try {
-      final response = await networkConfigWithAuth(user, password).get(
-        environments.approval_request_url,
+      final response = await networkConfigWithToken('$token').get(
+        environments.approval_request_list,
       );
 
-      //print('RESPONSE ${response.data}');
-
       requestList = ApprovalRequest.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      print('Get Sub Module on error');
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        print('Authentication failed error');
+        await getToken(user, password);
+        return getApprovalRequest();
+      }
+      throw DioException.fromDioError(e);
     }
 
     return requestList;
@@ -265,18 +375,23 @@ class BuroApiProvider {
   Future<ApprovalRequestDetails> getApprovalDetails(int applicationId) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var requestDetailList;
+
     try {
-      final response = await networkConfigWithAuth(user, password).post(
-        environments.approval_detail_url,
+      final response = await networkConfigWithToken('$token').post(
+        environments.approval_request_details,
         data: {"applicationID": applicationId},
       );
 
-      //print('RESPONSE ${response.data}');
-
       requestDetailList = ApprovalRequestDetails.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getApprovalDetails(applicationId);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return requestDetailList;
@@ -286,11 +401,12 @@ class BuroApiProvider {
       int appDetailsId, int applicationId, String actionType) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
-
+    var token = await sessionManager.token;
     var actionResponse;
+
     try {
-      final response = await networkConfigWithAuth(user, password).put(
-        environments.approval_action_single_url,
+      final response = await networkConfigWithToken('$token').put(
+        environments.approval_action_single,
         data: {
           "appDetailsID": appDetailsId,
           "applicationID": applicationId,
@@ -299,8 +415,13 @@ class BuroApiProvider {
       );
 
       actionResponse = ApprovalAction.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return approvalAction(appDetailsId, applicationId, actionType);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return actionResponse;
@@ -310,17 +431,24 @@ class BuroApiProvider {
       int applicationId, String actionType) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
 
     var approvalActionResponse;
+
     try {
-      final response = await networkConfigWithAuth(user, password).put(
-        environments.approval_action_all_url,
+      final response = await networkConfigWithToken('$token').put(
+        environments.approval_action_all,
         data: {"applicationID": applicationId, "ApprovalStatus": actionType},
       );
 
       approvalActionResponse = ApprovalAction.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return approvalActionAll(applicationId, actionType);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return approvalActionResponse;
@@ -329,31 +457,42 @@ class BuroApiProvider {
   Future<ApplySubmit> submitApplyList(List applyList, int planId) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
 
     var submitResponse;
+
     try {
-      final response = await networkConfigWithAuth(user, password)
-          .post('${environments.submit_apply_url}/$planId', data: applyList);
+      final response = await networkConfigWithToken('$token').post(
+        '${environments.submit_apply}/$planId',
+        data: applyList,
+      );
 
       submitResponse = ApplySubmit.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      print('Get Sub Module on error');
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return submitApplyList(applyList, planId);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return submitResponse;
   }
 
-  Future<ChangePasswordModel> changePassword(bool isForgetPass, String oldPass,
-      String newPass, String confirmPass) async {
+  Future<ChangePasswordModel> changePassword(
+      String oldPass, String newPass, String confirmPass) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
 
     var response;
+
     try {
-      final getResponse = await networkConfigWithAuth(user, password).post(
-        environments.change_pass_url,
+      final getResponse = await networkConfigWithToken('$token').post(
+        environments.change_pass,
         data: {
-          "loginID": user,
           "oldPassword": oldPass,
           "newPassword": newPass,
           "confirmPassword": confirmPass
@@ -361,10 +500,14 @@ class BuroApiProvider {
       );
 
       response = ChangePasswordModel.fromJson(getResponse.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return changePassword(oldPass, newPass, confirmPass);
+      }
+      throw DioException.fromDioError(e);
     }
-
     return response;
   }
 
@@ -372,27 +515,29 @@ class BuroApiProvider {
     var db = DataBaseHandler();
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     late Branch branchList;
+    var count = 0;
+
     try {
-      final response = await networkConfigWithAuth(user, password).get(
-        environments.branch_list_url,
+      final response = await networkConfigWithToken('$token').get(
+        environments.branch_list,
       );
 
       branchList = Branch.fromJson(response.data);
 
-      var count = 0;
-      //print('RESPONSE Branch List Size ${branchList.data!.length}');
-
       branchList.data!.forEach((element) {
         count++;
-        //print('Loaded Branch Item Code ${element.branchCode} Name ${element.branchName}');
         var item = Item(element.branchCode!, element.branchName!);
         addBranchItem(item);
       });
-
-      print('Count $count');
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getAllBranch();
+      }
+      throw DioException.fromDioError(e);
     }
 
     return branchList;
@@ -402,11 +547,13 @@ class BuroApiProvider {
     final response = await networkConfigWithHeader(
             'BUROBD-GP_OTP', 'WgIvOJvZIdiXjiLgQa0wDaLit7WZuif4lksL9y')
         .post(
-      environments.otp_url,
+      environments.generate_otp,
       data: {
         "loginid": userId,
       },
     );
+
+    print('UserId $userId');
 
     final data = GenerateOTP.fromJson(response.data);
 
@@ -419,34 +566,30 @@ class BuroApiProvider {
     var count;
     handler.initializeDBBranch().whenComplete(() async => {
           result = await handler.insertBranchItem(item),
-          //print('Insert Branch Item result $result')
-          /* setState(() {
-        print('Result $result');
-      }),*/
         });
   }
 
-  Future<VerifyOtp> verifyOtpResetPass(
+  Future<VerifyOtp> submitOtpForgotPass(
       String mobileOtp, String emailOtp) async {
     // This method used for submit OTP verify at forgot password
 
     var user = await sessionManager.userID;
     var otp = mobileOtp.isEmpty ? emailOtp : mobileOtp;
+    var password = await sessionManager.password;
+    var token = await sessionManager.token;
 
-    //print('User $user Otp $otp');
+    late VerifyOtp verifyOtp;
 
-    final response =
-        await networkConfigAuthNHeader('isForgotPassword', 'true', user, otp)
-            .post(
-      environments.verify_otp_url,
-      data: {
-        "mobileOtp": mobileOtp,
-        "emailOtp": emailOtp,
-      },
-    );
+    try {
+      final response = await networkConfigWithoutAuth().post(
+        environments.submit_otp_forgot,
+        data: {"loginID": user, "mobileOtp": mobileOtp, "emailOtp": emailOtp},
+      );
 
-    print('Response ${response.data}');
-    final verifyOtp = VerifyOtp.fromJson(response.data);
+      verifyOtp = VerifyOtp.fromJson(response.data);
+    } on Exception catch (e) {
+      print('Exception $e');
+    }
 
     return verifyOtp;
   }
@@ -454,17 +597,22 @@ class BuroApiProvider {
   Future<BillRequest> getBillRequest() async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var requestList;
+
     try {
-      final response = await networkConfigWithAuth(user, password).get(
-        environments.bill_req_list,
+      final response = await networkConfigWithToken('$token').get(
+        environments.my_bill_req_list,
       );
 
-      //print('RESPONSE ${response.data}');
-
       requestList = BillRequest.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getBillRequest();
+      }
+      throw DioException.fromDioError(e);
     }
 
     return requestList;
@@ -475,12 +623,12 @@ class BuroApiProvider {
     var user = await sessionManager.userID;
 
     var response;
+
     try {
-      final getResponse = await networkConfigAuthNHeader(
-              'isForgotPassword', 'true', user, oldPass)
-          .post(
-        environments.change_pass_url,
+      final getResponse = await networkConfig().post(
+        environments.changePassForgot,
         data: {
+          "loginID": user,
           "oldPassword": oldPass,
           "newPassword": newPass,
           "confirmPassword": confirmPass
@@ -498,20 +646,25 @@ class BuroApiProvider {
   Future<BillRequestDetails> getBillDetails(int applicationId) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var requestDetails;
+
     try {
-      final response = await networkConfigWithAuth(user, password).post(
-        environments.bill_req_details,
+      final response = await networkConfigWithToken('$token').post(
+        environments.my_bill_req_details,
         data: {
           "applicationID": applicationId,
         },
       );
 
-      //print('RESPONSE ${response.data}');
-
       requestDetails = BillRequestDetails.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getBillDetails(applicationId);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return requestDetails;
@@ -520,16 +673,21 @@ class BuroApiProvider {
   Future<BillSubmitModel> billSubmit(List list) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var requestDetails;
 
-    //print('Map list $list ');
     try {
-      final response = await networkConfigWithAuth(user, password)
-          .post(environments.bill_submit, data: list);
+      final response = await networkConfigWithToken('$token')
+          .post(environments.my_bill_submit, data: list);
 
       requestDetails = BillSubmitModel.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return billSubmit(list);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return requestDetails;
@@ -538,12 +696,12 @@ class BuroApiProvider {
   Future<BillDownloadInfo> getBillDownloadInfo(int applicationId) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var billDetails;
 
-    //print('Map list $list ');
     try {
-      final response = await networkConfigWithAuth(user, password).post(
-        environments.bill_download_info,
+      final response = await networkConfigWithToken('$token').post(
+        environments.my_bill_download_info,
         data: {
           "reportType": "pdf/ word/ excel",
           "applicationID": applicationId
@@ -551,11 +709,13 @@ class BuroApiProvider {
       );
 
       billDetails = BillDownloadInfo.fromJson(response.data);
-
-      //print('Bill Details $billDetails');
-
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getBillDownloadInfo(applicationId);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return billDetails;
@@ -564,17 +724,22 @@ class BuroApiProvider {
   Future<PlanApprovalRequest> getPlanApproval() async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var planList;
+
     try {
-      final response = await networkConfigWithAuth(user, password).get(
-        environments.plan_approval_list,
+      final response = await networkConfigWithToken('$token').get(
+        environments.approval_plan_list,
       );
 
-      //print('RESPONSE ${response.data}');
-
       planList = PlanApprovalRequest.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getPlanApproval();
+      }
+      throw DioException.fromDioError(e);
     }
 
     return planList;
@@ -583,17 +748,22 @@ class BuroApiProvider {
   Future<PlanDetailModel> getPlanDetail(int planId) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var planDetail;
+
     try {
-      final response = await networkConfigWithAuth(user, password).get(
-        '${environments.plan_detail_url}$planId',
+      final response = await networkConfigWithToken('$token').get(
+        '${environments.my_plan_detail}$planId',
       );
 
-      //print('RESPONSE ${response.data}');
-
       planDetail = PlanDetailModel.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getPlanDetail(planId);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return planDetail;
@@ -602,17 +772,22 @@ class BuroApiProvider {
   Future<PlanApprovalDetailsModel> getPlanApprovalDetail(int planId) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var planApprovalDetail;
+
     try {
-      final response = await networkConfigWithAuth(user, password).get(
-        '${environments.plan_approval_details}$planId',
+      final response = await networkConfigWithToken('$token').get(
+        '${environments.approval_plan_details}$planId',
       );
 
-      //print('RESPONSE ${response.data}');
-
       planApprovalDetail = PlanApprovalDetailsModel.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getPlanApprovalDetail(planId);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return planApprovalDetail;
@@ -621,16 +796,23 @@ class BuroApiProvider {
   Future<RequestCancel> cancelPlanReqIndividual(int planId) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
 
     var requestCancel;
+
     try {
-      final response = await networkConfigWithAuth(user, password).put(
-        '${environments.plan_cancel_individual}$planId',
+      final response = await networkConfigWithToken('$token').put(
+        '${environments.individual_plan_cancel}$planId',
       );
 
       requestCancel = RequestCancel.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return cancelPlanReqIndividual(planId);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return requestCancel;
@@ -639,16 +821,23 @@ class BuroApiProvider {
   Future<RequestCancel> cancelPlanRequestAll(int planId) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
 
     var requestCancelAll;
+
     try {
-      final response = await networkConfigWithAuth(user, password).put(
-        '${environments.plan_cancel_all}$planId',
+      final response = await networkConfigWithToken('$token').put(
+        '${environments.all_plan_cancel}$planId',
       );
 
       requestCancelAll = RequestCancel.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return cancelPlanRequestAll(planId);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return requestCancelAll;
@@ -660,16 +849,23 @@ class BuroApiProvider {
       String actionType) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
 
     var actionResponse;
+
     try {
-      final response = await networkConfigWithAuth(user, password).put(
-          environments.plan_action_all,
+      final response = await networkConfigWithToken('$token').put(
+          environments.all_plan_action,
           data: {"PlanID": planID, "ActivityName": actionType});
 
-      actionResponse = ApprovalAction.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+      actionResponse = PlanDetailModel.fromJson(response.data);
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return planApprovalActionAll(planID, actionType);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return actionResponse;
@@ -682,11 +878,13 @@ class BuroApiProvider {
       String actionType) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
 
     var approvalActionResponse;
+
     try {
-      final response = await networkConfigWithAuth(user, password).put(
-        environments.plan_action_individual,
+      final response = await networkConfigWithToken('$token').put(
+        environments.individual_plan_action,
         data: {
           "PlanDetailsID": planDetailsID,
           "PlanID": planID,
@@ -695,8 +893,13 @@ class BuroApiProvider {
       );
 
       approvalActionResponse = ApprovalAction.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return planApprovalActionIndividual(planDetailsID, planID, actionType);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return approvalActionResponse;
@@ -705,17 +908,23 @@ class BuroApiProvider {
   Future<MyPlan> getMyPlan() async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var planList;
+
     try {
-      final response = await networkConfigWithAuth(user, password).get(
-        environments.plan_list_url,
+      final response = await networkConfigWithToken('$token').get(
+        environments.my_plan_list,
       );
 
-      //print('RESPONSE ${response.data}');
-
       planList = MyPlan.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getMyPlan();
+      }
+      throw DioException.fromDioError(e);
     }
 
     return planList;
@@ -724,15 +933,22 @@ class BuroApiProvider {
   Future<ApplySubmit> submitPlan(var data) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
 
     var submitResponse;
+
     try {
-      final response = await networkConfigWithAuth(user, password)
-          .post(environments.plan_submit, data: data);
+      final response = await networkConfigWithToken('$token')
+          .post(environments.submit_plan, data: data);
 
       submitResponse = ApplySubmit.fromJson(response.data);
-    } on Exception catch (e) {
-      print('Exception $e');
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return submitPlan(data);
+      }
+      throw DioException.fromDioError(e);
     }
 
     return submitResponse;
@@ -741,19 +957,65 @@ class BuroApiProvider {
   Future<ApprovedPlan> getApprovedPlan() async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
+    var token = await sessionManager.token;
     var planList;
+
     try {
-      final response = await networkConfigWithAuth(user, password).get(
-        environments.approved_plan_list,
+      final response = await networkConfigWithToken('$token').get(
+        environments.plan_list_approved,
       );
 
-      //print('RESPONSE ${response.data}');
-
       planList = ApprovedPlan.fromJson(response.data);
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getApprovedPlan();
+      }
+      throw DioException.fromDioError(e);
+    }
+
+    return planList;
+  }
+
+  Future<UserAthenticate> getToken(String username, String password) async {
+    late UserAthenticate authenticate;
+    try {
+      final response = await networkConfig().post(
+        environments.userAuthenticate,
+        data: {"loginID": username, "password": password},
+      );
+
+      authenticate = UserAthenticate.fromJson(response.data);
+      await sessionManager.setToken(authenticate.token);
     } on Exception catch (e) {
       print('Exception $e');
     }
 
-    return planList;
+    return authenticate;
+  }
+
+  Future<LoginUser> authenticateWithToken(String token) async {
+    final response = await networkConfigWithToken(token).post(
+      environments.userLoginWithToken,
+    );
+
+    final loginUser = LoginUser.fromJson(response.data);
+
+    return loginUser;
+  }
+
+  Future<VerifyOtp> submitOtpForgot(String mobileOtp, String emailOtp) async {
+    var user = await sessionManager.userID;
+    var password = await sessionManager.password;
+    var token = await sessionManager.token;
+    final response = await networkConfigWithToken(token).post(
+      environments.submit_otp_forgot,
+      data: {"loginID": user, "mobileOtp": mobileOtp, "emailOtp": emailOtp},
+    );
+
+    final verifyOtp = VerifyOtp.fromJson(response.data);
+
+    return verifyOtp;
   }
 }

@@ -1,55 +1,63 @@
 class _Environments {
   final base_url = 'http://192.168.1.14'; //for BURO H/O network
 
-  //final base_url = 'http://123.200.2.189'; // when doing work at home , out of BURO network like mobile data, home wifi
+  //final base_url =
+    //  'http://123.200.2.189'; // when doing work at home , out of BURO network like mobile data, home wifi
   //http://192.168.1.14/burobd
   //final base_url_new = '';
 
-  //Testing Leave api on 14/11/2022
-  final test_login_url = '/bbhrm_app/api/Authentication/authenticate';
-  //
+  //-----------New API Collection with new base url------------------
 
-  final login_url = '/burobd/api/User/LoginUser';
-  final verify_otp_url = '/burobd/api/User/OTPSubmit';
-  final module_url = '/burobd/api/Home/GetModulePermission';
-  final sub_module_url = '/burobd/api/Home/GetModuleUIPermission/';
-  final request_url = '/burobd/api/FieldVisit/MyRequestList';
-  final request_details_url = '/burobd/api/FieldVisit/MyRequestDetails';
-  final request_cancel_single_url = '/burobd/api/FieldVisit/MyRequestCancel';
-  final request_cancel_all_url = '/burobd/api/FieldVisit/MyRequestCancelAll';
-  final approval_request_url = '/burobd/api/FieldVisit/ApprovalRequestList';
-  final approval_detail_url = '/burobd/api/FieldVisit/ApprovalRequestLDetails';
-  final approval_action_single_url =
-      '/burobd/api/FieldVisit/ApprovalListDetailsAction';
-  final approval_action_all_url = '/burobd/api/FieldVisit/ApprovalListAction';
-  final submit_apply_url = '/burobd/api/FieldVisit/ApplicationSubmit/';
-  final change_pass_url = '/burobd/api/User/ChangePassword';
-  final branch_list_url = '/burobd/api/BasicData/BranchList';
+  // Login
+  final userAuthenticate = '/bbhrm_app/api/Authentication/authenticate';
+  final userLoginWithToken = '/bbhrm_app/api/User/LoginUser';
+  final submit_otp_login = '/bbhrm_app/api/User/OTPSubmit';
 
-  final otp_url =
-      '/burobd_Gen/api/User/OTP_Generate'; //'/burobd_Gen/api/User/OTP_Generate'
-  final submit_otp_url =
-      '/burobd/api/User/OTPSubmit'; // this url is used for submit otp at forgot password
+  // Forgot Password
+  final generate_otp = '/bbhrm_app/api/User/OTP_Generate';
+  final changePassForgot = '/bbhrm_app/api/User/ChangePasswordIfForgot';
 
-  //bill and Report
-  final bill_req_list = '/burobd/api/FieldVisitBill/MyRequestList';
-  final bill_req_details = '/burobd/api/FieldVisitBill/MyRequestDetails';
-  final bill_submit = '/burobd/api/FieldVisitBill/ApplicationSubmit';
-  final bill_download_info =
-      '/burobd/api/Report_FieldVisit/BillDownload'; // this Url is Used for download bill Info
+  //Home Page
+  final get_module = '/bbhrm_app/api/Home/GetModulePermission';
+  final sub_module = '/bbhrm_app/api/Home/GetModuleUIPermission/';
+  final my_request_list = '/bbhrm_app/api/FieldVisit/MyRequestList';
+  final my_request_details = '/bbhrm_app/api/FieldVisit/MyRequestDetails';
+  final my_request_cancel_single = '/bbhrm_app/api/FieldVisit/MyRequestCancel';
+  final my_request_cancel_all = '/bbhrm_app/api/FieldVisit/MyRequestCancelAll';
 
   //plan
-  final plan_list_url = '/burobd/api/FieldVisit/MyPlanList';
-  final plan_approval_list = '/burobd/api/FieldVisit/ApprovalPlanList';
-  final plan_detail_url = '/burobd/api/FieldVisit/MyPlanDetails/';
-  final plan_approval_details = '/burobd/api/FieldVisit/ApprovalPlanDetails/';
-  final plan_cancel_all = '/burobd/api/FieldVisit/PlanCancelAll/';
-  final plan_cancel_individual = '/burobd/api/FieldVisit/PlanDetailsCancel/';
-  final plan_action_all = '/burobd/api/FieldVisit/ApprovalPlanAction';
-  final plan_action_individual =
-      '/burobd/api/FieldVisit/ApprovalPlanDetailsAction';
-  final plan_submit = '/burobd/api/FieldVisit/PlanSubmit';
-  final approved_plan_list = '/burobd/api/FieldVisit/ApprovedPlanList';
+  final my_plan_list = '/bbhrm_app/api/FieldVisit/MyPlanList';
+  final my_plan_detail = '/bbhrm_app/api/FieldVisit/MyPlanDetails/';
+
+  //bill and Report
+  final my_bill_req_list = '/bbhrm_app/api/FieldVisitBill/MyRequestList';
+  final my_bill_req_details = '/bbhrm_app/api/FieldVisitBill/MyRequestDetails';
+  final plan_list_approved = '/bbhrm_app/api/FieldVisit/ApprovedPlanList';
+  final submit_plan = '/bbhrm_app/api/FieldVisit/PlanSubmit';
+  final all_plan_cancel = '/bbhrm_app/api/FieldVisit/PlanCancelAll/';
+  final individual_plan_cancel = '/bbhrm_app/api/FieldVisit/PlanDetailsCancel/';
+  final submit_apply = '/bbhrm_app/api/FieldVisit/ApplicationSubmit/';
+  final branch_list = '/bbhrm_app/api/BasicData/BranchList';
+  final change_pass = '/bbhrm_app/api/User/ChangePassword';
+  final my_bill_submit = '/bbhrm_app/api/FieldVisitBill/ApplicationSubmit';
+  final my_bill_download_info =
+      '/bbhrm_app/api/Report_FieldVisit/BillDownload'; // this Url is Used for download bill Info
+  final approval_plan_list = '/bbhrm_app/api/FieldVisit/ApprovalPlanList';
+  final approval_plan_details =
+      '/bbhrm_app/api/FieldVisit/ApprovalPlanDetails/';
+  final all_plan_action = '/bbhrm_app/api/FieldVisit/ApprovalPlanAction';
+  final individual_plan_action = '/bbhrm_app/api/FieldVisit/ApprovalPlanDetailsAction';
+
+  final approval_request_list = '/bbhrm_app/api/FieldVisit/ApprovalRequestList';
+  final approval_request_details =
+      '/bbhrm_app/api/FieldVisit/ApprovalRequestLDetails';
+  final approval_action_single =
+      '/bbhrm_app/api/FieldVisit/ApprovalListDetailsAction';
+  final approval_action_all = '/bbhrm_app/api/FieldVisit/ApprovalListAction';
+  final submit_otp_forgot = '/bbhrm_app/api/User/OTPSubmitIfForgot';
+
+
+
 }
 
 _Environments environments = _Environments();

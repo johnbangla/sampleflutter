@@ -21,17 +21,24 @@
 // import '../models/request_cancel.dart';
 // import '../models/request_cancel_all.dart';
 // import '../models/sub_module.dart';
+// import '../models/user_authenticate.dart';
 // import '../models/verify_otp.dart';
 // import 'buro_api_provider.dart';
-// import 'test_api_provider.dart';
 
-// class TestRepository {
-//   // final _provider = BuroApiProvider();
-//     final _provider = TestApiProvider();
+// class BuroRepository {
+//   final _provider = BuroApiProvider();
 
-//   Future<LoginUser> authenticate(String username, String password) async {
-//     return await _provider.authenticate(username, password);
+//   Future<UserAthenticate> getToken(String username, String password) async {
+//     return await _provider.getToken(username, password);
 //   }
+//     Future<LoginUser> authenticateWithToken(String token) async {
+//     return await _provider.authenticateWithToken(token);
+//   }
+
+
+//   // Future<LoginUser> authenticate(String username, String password) async {
+//   //   return await _provider.authenticate(username, password);
+//   // }
 
 //   Future<VerifyOtp> verifyOtp(String mobileOtp, String emailOtp) async {
 //     return await _provider.verifyOtp(mobileOtp, emailOtp);

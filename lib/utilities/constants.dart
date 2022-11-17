@@ -13,6 +13,10 @@ class _Constants{
   final KEY_PLAN_ID = 'plan_id';
 
 
+  final KEY_TOKEN = 'token_id';
+
+
+
 
 
 

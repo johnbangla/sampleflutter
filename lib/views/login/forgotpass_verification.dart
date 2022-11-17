@@ -1,8 +1,9 @@
 import 'dart:io';
 
+
+import 'package:buroleave/views/login/reset_password.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import 'package:otp_text_field/otp_field.dart';
 import 'package:otp_text_field/otp_field_style.dart';
 import 'package:otp_text_field/style.dart';
@@ -11,11 +12,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../localization/Language/languages.dart';
 import '../../repository/bloc/forgot_pass_verification/forgot_pass_verification_cubit.dart';
 import '../../repository/models/generate_otp.dart';
-import '../../sessionmanager/session_manager.dart';
+import '../../sessionmanager-prev/session_manager.dart';
 import '../../theme/colors.dart';
 import '../../theme/styles.dart';
 import '../../utilities/common_methods.dart';
-import 'reset_password.dart';
 
 //This class has been used for forgot password
 // user verification with mobile or email Otp
@@ -129,9 +129,9 @@ class _ForgotPassVerificationState extends State<ForgotPassVerification> {
                             if (result.isNotEmpty &&
                                 result[0].rawAddress.isNotEmpty) {
                               var response = await user.data!.otpToMobile
-                                  ? bloc.verifyOtpResetPass(
+                                  ? bloc.submitOtpForgotPass(
                                       mobileOtp: otpCode, emailOtp: '')
-                                  : bloc.verifyOtpResetPass(
+                                  : bloc.submitOtpForgotPass(
                                       mobileOtp: '', emailOtp: otpCode);
                               response
                                   .then((value) => {
@@ -145,6 +145,7 @@ class _ForgotPassVerificationState extends State<ForgotPassVerification> {
                                           }
                                         else
                                           {
+                                            Navigator.pop(context),
                                             if (selectedLang == 'en')
                                               {
                                                 showMessage(
@@ -249,316 +250,3 @@ void showMessage(BuildContext context, String message, Color color) {
 }
 
 
-
-/*
-class ForgotPassVerification extends StatefulWidget {
-  static const routeName = '/forgotPassVerification';
-
-  late final GenerateOTP arguments;
-
-  ForgotPassVerification(this.arguments, {Key? key}) : super(key: key);
-
-  //static route() => MaterialPageRoute(builder: (_) => ForgotPassVerification());
-
-  @override
-  _ForgotPassVerificationState createState() => _ForgotPassVerificationState();
-}
-
-class _ForgotPassVerificationState extends State<ForgotPassVerification> {
-  String buttonName = "Send";
-  TextEditingController phoneController = TextEditingController();
-  String otpCode = "";
-  var selectedLang;
-
-  @override
-  Widget build(BuildContext context) {
-    final bloc = context.read<ForgotPassVerificationCubit>();
-
-    var user = widget.arguments;
-
-    return Scaffold(body:
-        BlocBuilder<ForgotPassVerificationCubit, ForgotPassVerificationState>(
-      builder: (context, state) {
-        print("State Forget Pass verification State ${state}");
-
-
-        return Container(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 120,
-                ),
-                Text(user.data!.otpToMobile == true
-                    ? '${Languages.of(context)!.otpTextMobile}'
-                    : '${Languages.of(context)!.otpTextEmail}'),
-                SizedBox(
-                  height: 20,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 20),
-                  child: TextFormField(
-                    initialValue: user.data!.otpToMobile == true
-                        ? '${user.data!.mobile}'
-                        : '${user.data!.email}',
-                    enabled: false,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(
-                  height: 60,
-                ),
-                Align(
-                  child: Text(
-                    "${Languages.of(context)!.digitInfo}",
-                    style: TextStyle(fontSize: 16, color: Colors.black87),
-                  ),
-                  alignment: Alignment.center,
-                ),
-                SizedBox(
-                  height: 50,
-                ),
-                otpField(),
-                SizedBox(
-                  height: 40,
-                ),
-                SizedBox(
-                  height: 150,
-                ),
-                InkWell(
-                  onTap: () async {
-
-                    if (otpCode.length == 4) {
-                      selectedLang = await sessionManager.selectedLang;
-                      try {
-                        final result =
-                            await InternetAddress.lookup('google.com');
-                        if (result.isNotEmpty &&
-                            result[0].rawAddress.isNotEmpty) {
-                          var response = await user.data!.otpToMobile
-                              ? bloc.verifyOtpResetPass(
-                                  mobileOtp: otpCode, emailOtp: '')
-                              : bloc.verifyOtpResetPass(
-                                  mobileOtp: '', emailOtp: otpCode);
-
-                          if (state is ForgotPassVerificationLoadedState) {
-                            print(
-                                'Value At state ${state.data.success}  ${response.toString()}');
-                          }
-                          response.then((value) => {
-                            print('Value ${value}'),
-                            if (value!.success)
-                              {
-                                print("Success Condition"),
-                               Navigator.pushNamed(context, ResetPassword.routeName,arguments: otpCode)
-
-                              }
-                            else
-                              {
-                                if (selectedLang == 'en')
-                                  {
-                                    showMessage(context,
-                                        '${value.messageEn}', Colors.red),
-                                  }
-                                else
-                                  {
-                                    showMessage(context,
-                                        '${value.messageBn}', Colors.red),
-                                  }
-                              }
-                          });
-                        }
-                      } on SocketException catch (_) {
-                        showMessage(
-                            context,
-                            Languages.of(context)!.internetErrorText,
-                            Colors.red);
-                      }
-                    } else {
-                      showMessage(
-                          context,
-                          '${Languages.of(context)!.otpValidation}',
-                          Colors.red);
-                    }
-                  },
-                  child: Container(
-                    height: 50,
-                    width: MediaQuery.of(context).size.width - 60,
-                    decoration: BoxDecoration(
-                        color: Color(0xffff9601),
-                        borderRadius: BorderRadius.circular(20)),
-                    child: Center(
-                      child: Text(
-                        "${Languages.of(context)!.submitButton}",
-                        style: TextStyle(
-                            fontSize: 17,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  ),
-                )
-              ],
-            ),
-          ),
-        );
-      },
-    ));
-    */
-/*return Scaffold(
-        body: Container(
-      height: MediaQuery.of(context).size.height,
-      width: MediaQuery.of(context).size.width,
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(
-              height: 120,
-            ),
-             Text(user.data!.otpToMobile == true
-                ? '${Languages.of(context)!.otpTextMobile}'
-                : '${Languages.of(context)!.otpTextEmail}'),
-
-            SizedBox(
-              height: 20,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20),
-              child: TextFormField(
-                 initialValue: user.data!.otpToMobile == true
-                    ? '${user.data!.mobile}'
-                    : '${user.data!.email}',
-
-                enabled: false,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            SizedBox(
-              height: 60,
-            ),
-            Align(
-              child: Text(
-                "${Languages.of(context)!.digitInfo}",
-                style: TextStyle(fontSize: 16, color: Colors.black87),
-              ),
-              alignment: Alignment.center,
-            ),
-            SizedBox(
-              height: 50,
-            ),
-            otpField(),
-            SizedBox(
-              height: 40,
-            ),
-            SizedBox(
-              height: 150,
-            ),
-            InkWell(
-              onTap: () async {
-                if (otpCode.length == 4) {
-                  selectedLang = await sessionManager.selectedLang;
-                  try {
-                    final result = await InternetAddress.lookup('google.com');
-                    if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-                      var response = await user.data.otpToMobile
-                          ? bloc.verifyOtpResetPass(mobileOtp: otpCode, emailOtp: '')
-                          : bloc.verifyOtpResetPass(mobileOtp: '', emailOtp: otpCode);
-
-                      response.then((value) => {
-                            if (value!.success)
-                              {
-                                print("Success Condition"),
-                                sessionManager.setIsLoggedIn(true),
-                                Navigator.push(context,
-                            ResetPassword);
-
-                }
-                            else
-                              {
-                                if (selectedLang == 'en')
-                                  {
-                                    showMessage(context, '${value.messageEn}',
-                                        Colors.red),
-                                  }
-                                else
-                                  {
-                                    showMessage(context, '${value.messageBn}',
-                                        Colors.red),
-                                  }
-                              }
-                          });
-                    }
-                  } on SocketException catch (_) {
-                    showMessage(context,
-                        Languages.of(context)!.internetErrorText, Colors.red);
-                  }
-                } else {
-                  showMessage(context,
-                      '${Languages.of(context)!.otpValidation}', Colors.red);
-                }
-
-                   },
-              child: Container(
-                height: 50,
-                width: MediaQuery.of(context).size.width - 60,
-                decoration: BoxDecoration(
-                    color: Color(0xffff9601),
-                    borderRadius: BorderRadius.circular(20)),
-                child: Center(
-                  child: Text(
-                    "${Languages.of(context)!.submitButton}",
-                    style: TextStyle(
-                        fontSize: 17,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-            )
-          ],
-        ),
-      ),
-    ));*//*
-
-  }
-
-  void showMessage(BuildContext context, String message, Color color) {
-    Scaffold.of(context).showSnackBar(SnackBar(
-      content: Text(
-        message,
-      ),
-      backgroundColor: color,
-    ));
-  }
-
-  Widget otpField() {
-    return OTPTextField(
-      length: 4,
-      width: MediaQuery.of(context).size.width,
-      fieldWidth: 58,
-      otpFieldStyle: OtpFieldStyle(
-          backgroundColor: Colors.green,
-          borderColor: Colors.white,
-          focusBorderColor: Colors.orangeAccent),
-      style: TextStyle(fontSize: 17, color: Colors.white),
-      textFieldAlignment: MainAxisAlignment.spaceAround,
-      fieldStyle: FieldStyle.underline,
-
-
-      onCompleted: (pin) {
-        print("Completed: " + pin);
-        setState(() {
-          otpCode = pin;
-        });
-      },
-      onChanged: (pin) {
-        setState(() {
-          otpCode = pin;
-        });
-      },
-    );
-  }
-}
-*/
