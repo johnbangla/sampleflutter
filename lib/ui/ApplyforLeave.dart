@@ -1,9 +1,16 @@
 import 'package:alert/alert.dart';
+import 'package:buroleave/Models/Leaveinfo.dart';
+import 'package:buroleave/repository/database/database_handler.dart';
+import 'package:buroleave/repository/network/buro_repository.dart';
+import 'package:buroleave/sessionmanager-prev/session_manager.dart';
+import 'package:buroleave/theme/colors.dart';
+import 'package:buroleave/theme/styles.dart';
 import 'package:buroleave/ui/MyCalendar.dart';
 import 'package:buroleave/ui/createDrawer.dart';
 import 'package:buroleave/ui/mycountry.dart';
 import 'package:country_state_city_picker/country_state_city_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
@@ -11,8 +18,8 @@ import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 class FormScreen extends StatefulWidget {
   static const String routeName = '/applyleave';
- static route() => MaterialPageRoute(builder: (_) => FormScreen());
- 
+  static route() => MaterialPageRoute(builder: (_) => FormScreen());
+
   // const FormScreen({super.key});
   @override
   State<StatefulWidget> createState() {
@@ -43,6 +50,15 @@ class FormScreenState extends State<FormScreen> {
   String _dateCount = '';
   String _range = '';
   String _rangeCount = '';
+  //21/11/2022
+  String supervisorName = '';
+// var repository = BuroRepository();
+  late SessionManager sessionManager;
+
+  int _currentIndex = 0;
+  var selectedLang;
+  late DataBaseHandler handler;
+  //21/11/2022
 //For Date range selection
 
   //for built in state city
@@ -66,8 +82,134 @@ class FormScreenState extends State<FormScreen> {
   DateTime? firstdate;
   DateTime? seconddate;
 
+//R & D
+  int leaveCount = 0;
+  List leaves = [];
+  List myleavelist = [];
+  dynamic _selectedLocation; // Option 2
+  // PopularMovieService service = PopularMovieService();
+  var repository = BuroRepository();
+  // Future initialize() async {
+  //   leaves = [];
+  //   leaves = (await repository.getLeavetList()) as List;
+  //   print(leaves);
+  //   setState(() {
+  //     leaveCount = leaves.length;
+  //     leaves = leaves;
+  //   });
+  // }
+
+  // @override
+  // void initState() {
+  //   service = PopularMovieService();
+  //   initialize();
+  //   super.initState();
+  // }
+
+//R & D
+  @override
+  // Future<void> initState() async {
+  void initState() {
+    sessionManager = SessionManager();
+    this.handler = DataBaseHandler();
+    getSuperVisorInfo().then((value) => {
+          supervisorName = value,
+          setState(() {}),
+        });
+
+    getSelectedLang().then((value) => {
+          selectedLang = value,
+          print('Selected Lang in plan submit ${value.toString()}')
+        });
+
+    getDataForApply().then((value) => {
+          value.data.forEach((element) {
+            myleavelist = (element.leaveTypeName +
+                "Remaining " +
+                element.remaining.toString()) as List;
+            print(myleavelist);
+
+            // print(element.leaveTypeName +"Remaining " + element.remaining.toString());
+          })
+        });
+
+    // getBranchListFromDatabase().then((value) => () {
+    //       //print('Value Length ${value.length}');
+    //       value.asMap().forEach((key, value) {
+    //         //print(" Branch Name ${value.name}");
+    //       });
+    //     });
+
+    // initialize();
+    super.initState();
+  }
+
+  Future<String> getSelectedLang() async {
+    return await sessionManager.selectedLang;
+  }
+
+  Future<String> getSuperVisorInfo() async {
+    return await sessionManager.supervisorInfo;
+  }
+
+  Future<Leaveinfo> getDataForApply() async {
+    // return await sessionManager.supervisorInfo;
+    return await repository.getLeavetList();
+  }
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  Widget _buildinitialLeavetype() {
+    return DropdownButton(
+      hint: Text('Please choose a location'), // Not necessary for Option 1
+      value: _selectedLocation,
+      onChanged: ( newValue) {
+        setState(() {
+          _selectedLocation = newValue.toString();
+        });
+      },
+      items: myleavelist.map((location) {
+        return DropdownMenuItem(
+          child: new Text(location),
+          value: location,
+        );
+      }).toList(),
+    );
+  }
+
+// This is for RECEIPENT NAME WIGET 21/11/2022
+  Widget _buildReceipent() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Recipient',
+            style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                fontStyle: FontStyle.normal,
+                color: ColorResources.GREY_DARK_SIXTY),
+          ),
+          SizedBox(
+            height: 5,
+          ),
+          Text(
+            ' $supervisorName ',
+            style: Styles.listHeaderTextStyle,
+          ),
+          SizedBox(
+            height: 10,
+          ),
+        ],
+      ),
+    );
+  }
+//tThis is for receipent name Wiget
+
+//
 //  Date range fucntions
 //Date range Function
 
@@ -97,7 +239,7 @@ class FormScreenState extends State<FormScreen> {
     return menuItems;
   }
 
-  Widget _buildDropdowndown() {
+  Widget _buildlLeavetype() {
     return DropdownButtonFormField(
         decoration: InputDecoration(
           enabledBorder: OutlineInputBorder(
@@ -344,7 +486,9 @@ class FormScreenState extends State<FormScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                _buildDropdowndown(),
+                _buildReceipent(),
+                _buildinitialLeavetype(),
+                _buildlLeavetype(),
                 _buildDayRemain(),
                 // _buildParking(),
                 // _buildDateRangeCalendar(),
@@ -389,7 +533,8 @@ class FormScreenState extends State<FormScreen> {
 
                     } else {
                       print('please Accept terms and condistion');
-                      Alert(message: 'please Accept terms and condistion').show();
+                      Alert(message: 'please Accept terms and condistion')
+                          .show();
                     }
 
                     //Send to API

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-
+import 'package:buroleave/Models/Leaveinfo.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_logging_interceptor/dio_logging_interceptor.dart';
 
@@ -33,8 +33,6 @@ import '../models/sub_module.dart';
 import '../models/user_authenticate.dart';
 import '../models/verify_otp.dart';
 import 'DioException.dart';
-
-
 
 export 'package:dio/dio.dart';
 
@@ -69,7 +67,7 @@ class BuroApiProvider {
         baseUrl: environments.base_url,
         receiveDataWhenStatusError: true);
 
-   /* dio.interceptors.add(
+    /* dio.interceptors.add(
       // For Print API RESPONSE IN LOG
       DioLoggingInterceptor(
         level: Level.body,
@@ -1017,5 +1015,33 @@ class BuroApiProvider {
     final verifyOtp = VerifyOtp.fromJson(response.data);
 
     return verifyOtp;
+  }
+
+  //Leave Type with details 21/11/2022
+  Future<Leaveinfo> getLeavetList() async {
+    var user = await sessionManager.userID;
+    var password = await sessionManager.password;
+    var token = await sessionManager.token;
+    var leaveList;
+
+    try {
+      final response = await networkConfigWithToken('$token').get(
+        environments.my_leave_list,
+      );
+
+      leaveList = Leaveinfo.fromJson(response.data); //ntc
+      print('testing');
+      print(leaveList);
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return getLeavetList();
+      }
+      throw DioException.fromDioError(e);
+    }
+
+    return leaveList;
   }
 }

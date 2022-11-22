@@ -1,5 +1,7 @@
 
 
+import 'package:buroleave/Models/Leaveinfo.dart';
+
 import '../models/ApprovedPlan.dart';
 import '../models/apply_submit.dart';
 import '../models/approval_action.dart';
@@ -189,5 +191,11 @@ class BuroRepository {
     return await _provider.authenticateWithToken(token);
   }
 
+//Leave Data
 
+Future<Leaveinfo> getLeavetList() async {
+    return await _provider.getLeavetList();
+  }
+
+//Leave data
 }

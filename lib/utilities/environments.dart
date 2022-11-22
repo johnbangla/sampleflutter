@@ -2,7 +2,7 @@ class _Environments {
   final base_url = 'http://192.168.1.14'; //for BURO H/O network
 
   //final base_url =
-    //  'http://123.200.2.189'; // when doing work at home , out of BURO network like mobile data, home wifi
+  //  'http://123.200.2.189'; // when doing work at home , out of BURO network like mobile data, home wifi
   //http://192.168.1.14/burobd
   //final base_url_new = '';
 
@@ -10,9 +10,11 @@ class _Environments {
 
   // Login
   final userAuthenticate = '/bbhrm_app/api/Authentication/authenticate';
+
   final userLoginWithToken = '/bbhrm_app/api/User/LoginUser';
   final submit_otp_login = '/bbhrm_app/api/User/OTPSubmit';
-
+//Leave Module 21/11/2022
+  final my_leave_list = '/bbhrm_app/api/Leave/GetRemainingLeave/15857';
   // Forgot Password
   final generate_otp = '/bbhrm_app/api/User/OTP_Generate';
   final changePassForgot = '/bbhrm_app/api/User/ChangePasswordIfForgot';
@@ -46,7 +48,8 @@ class _Environments {
   final approval_plan_details =
       '/bbhrm_app/api/FieldVisit/ApprovalPlanDetails/';
   final all_plan_action = '/bbhrm_app/api/FieldVisit/ApprovalPlanAction';
-  final individual_plan_action = '/bbhrm_app/api/FieldVisit/ApprovalPlanDetailsAction';
+  final individual_plan_action =
+      '/bbhrm_app/api/FieldVisit/ApprovalPlanDetailsAction';
 
   final approval_request_list = '/bbhrm_app/api/FieldVisit/ApprovalRequestList';
   final approval_request_details =
@@ -55,9 +58,6 @@ class _Environments {
       '/bbhrm_app/api/FieldVisit/ApprovalListDetailsAction';
   final approval_action_all = '/bbhrm_app/api/FieldVisit/ApprovalListAction';
   final submit_otp_forgot = '/bbhrm_app/api/User/OTPSubmitIfForgot';
-
-
-
 }
 
 _Environments environments = _Environments();
