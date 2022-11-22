@@ -71,6 +71,7 @@ dependencies:
   flutter_custom_clippers: ^2.0.0
   autocomplete_textfield: ^2.0.1
   syncfusion_flutter_pdf: ^20.3.56
+  flutter_dropdown: ^1.0.1+hotfix.1
 
 syncfusion_flutter_pdf: ^20.3.56
 path_provider: ^2.0.11

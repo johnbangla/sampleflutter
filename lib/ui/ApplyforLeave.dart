@@ -10,6 +10,7 @@ import 'package:buroleave/ui/createDrawer.dart';
 import 'package:buroleave/ui/mycountry.dart';
 import 'package:country_state_city_picker/country_state_city_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dropdown/flutter_dropdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
@@ -85,8 +86,8 @@ class FormScreenState extends State<FormScreen> {
 //R & D
   int leaveCount = 0;
   List leaves = [];
-  List myleavelist = [];
-  dynamic _selectedLocation; // Option 2
+  List<String> myleavelist = [];
+  dynamic _selectedLeave; // Option 2
   // PopularMovieService service = PopularMovieService();
   var repository = BuroRepository();
   // Future initialize() async {
@@ -122,12 +123,15 @@ class FormScreenState extends State<FormScreen> {
           print('Selected Lang in plan submit ${value.toString()}')
         });
 
-    getDataForApply().then((value) => {
+    getLeaveTypeDataForApply().then((value) => {
           value.data.forEach((element) {
-            myleavelist = (element.leaveTypeName +
-                "Remaining " +
-                element.remaining.toString()) as List;
-            print(myleavelist);
+            // myleavelist = element.leaveTypeName as List;
+
+            print(element.leaveTypeName);
+            // myleavelist.add(element.leaveTypeName  + '\n' + 'Remain' + element.remaining.toString());
+            myleavelist.add(element.leaveTypeName +
+                ' Remain ' +
+                element.remaining.toString());
 
             // print(element.leaveTypeName +"Remaining " + element.remaining.toString());
           })
@@ -152,26 +156,38 @@ class FormScreenState extends State<FormScreen> {
     return await sessionManager.supervisorInfo;
   }
 
-  Future<Leaveinfo> getDataForApply() async {
+  Future<Leaveinfo> getLeaveTypeDataForApply() async {
     // return await sessionManager.supervisorInfo;
     return await repository.getLeavetList();
   }
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // Widget _Testdropdown() {
+  //   return DropDown(
+  //     items: myleavelist,
+  //     hint: Text(myleavelist[0]),
+  //     icon: Icon(
+  //       Icons.expand_more,
+  //       color: Colors.blue,
+  //     ),
+  //     onChanged: print,
+  //   );
+  // }
+
   Widget _buildinitialLeavetype() {
     return DropdownButton(
-      hint: Text('Please choose a location'), // Not necessary for Option 1
-      value: _selectedLocation,
-      onChanged: ( newValue) {
+      hint: Text('Please Choose Leave Type'), // Not necessary for Option 1
+      value: _selectedLeave,
+      onChanged: (newValue) {
         setState(() {
-          _selectedLocation = newValue.toString();
+          _selectedLeave = newValue.toString();
         });
       },
-      items: myleavelist.map((location) {
+      items: myleavelist.map((leave) {
         return DropdownMenuItem(
-          child: new Text(location),
-          value: location,
+          child: new Text(leave, overflow: TextOverflow.visible),
+          value: leave,
         );
       }).toList(),
     );
@@ -212,6 +228,7 @@ class FormScreenState extends State<FormScreen> {
 //
 //  Date range fucntions
 //Date range Function
+//Test 22/11/2022
 
 //The below code is responsible for fetching leave sample Data
   List<DropdownMenuItem<String>> get LeaveTypedropdownItems {
@@ -251,17 +268,23 @@ class FormScreenState extends State<FormScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           filled: true,
-          fillColor: Colors.blueAccent,
+          fillColor: Color.fromARGB(255, 26, 155, 54),
         ),
         validator: (value) => value == null ? "Select a Leave Type" : null,
-        dropdownColor: Colors.blueAccent,
+        dropdownColor: Color.fromARGB(255, 6, 196, 180),
         value: selectedValueforleavetype,
         onChanged: (String? newValue) {
           setState(() {
             selectedValueforleavetype = newValue!;
           });
         },
-        items: LeaveTypedropdownItems);
+        // items: LeaveTypedropdownItems);
+        items: myleavelist.map((String value) {
+          return DropdownMenuItem<String>(
+            value: value,
+            child: Text(value),
+          );
+        }).toList());
   }
 
   Widget _buildDayRemain() {
@@ -371,13 +394,13 @@ class FormScreenState extends State<FormScreen> {
     return TextFormField(
       decoration: InputDecoration(labelText: 'Reason'),
       maxLength: 50,
-      // validator: (String? value) {
-      //   if (value!.isEmpty) {
-      //     return 'Name is Required';
-      //   }
+      validator: (String? value) {
+        if (value!.isEmpty) {
+          return 'Leave Reason is Required';
+        }
 
       //   return null;
-      // },
+       },
       onSaved: (String? value) {
         _resons = value;
       },
@@ -487,12 +510,14 @@ class FormScreenState extends State<FormScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 _buildReceipent(),
-                _buildinitialLeavetype(),
+                // _Testdropdown(),  working
+                // _buildinitialLeavetype(), working
+                _buildsmartCalendar(),
                 _buildlLeavetype(),
-                _buildDayRemain(),
+                //  _buildDayRemain(),  working
                 // _buildParking(),
                 // _buildDateRangeCalendar(),
-                _buildsmartCalendar(),
+
                 _buildReasons(),
                 // _buildDepartnamename(),
                 // _buildDropdowndownforDelegateuserlist(),
@@ -519,7 +544,13 @@ class FormScreenState extends State<FormScreen> {
 
                       //Six fields are manadatory for tracking leave info .
                       print(selectedValueforleavetype); //Leave type  1
-                      print(_ramainday); //from db        //no  need save
+                    //  print(_ramainday); //from db        //no  need save
+                      //  To convert int from string value
+                      int intValue = int.parse(selectedValueforleavetype!
+                          .replaceAll(RegExp('[^0-9]'), ''));
+                      print(intValue.toString());
+                      ////  To convert int from string value
+
                       print(_remainparking); //from db    //no need save
                       print(dtrange.start); //  start date for leave   2
                       print(dtrange.end); //end date for leave     3

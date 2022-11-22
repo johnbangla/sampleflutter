@@ -35,24 +35,24 @@ Widget createDrawer(BuildContext context) {
           onTap: () {
             Navigator.pushReplacementNamed(context, routes.reports);
           }),
-      ListTile(
-          leading: Icon(Icons.category),
-          title: Text('Leave Prediction'),
-          onTap: () {
-            Navigator.pushReplacementNamed(context, routes.categories);
-          }),
-      ListTile(
-          leading: Icon(Icons.movie),
-          title: Text('This Month Movie'),
-          onTap: () {
-            Navigator.pushReplacementNamed(context, routes.movies);
-          }),
-      ListTile(
-          leading: Icon(Icons.computer),
-          title: Text('All Country'),
-          onTap: () {
-            Navigator.pushReplacementNamed(context, routes.countries);
-          }),
+      // ListTile(
+      //     leading: Icon(Icons.category),
+      //     title: Text('Leave Prediction'),
+      //     onTap: () {
+      //       Navigator.pushReplacementNamed(context, routes.categories);
+      //     }),
+      // ListTile(
+      //     leading: Icon(Icons.movie),
+      //     title: Text('This Month Movie'),
+      //     onTap: () {
+      //       Navigator.pushReplacementNamed(context, routes.movies);
+      //     }),
+      // ListTile(
+      //     leading: Icon(Icons.computer),
+      //     title: Text('All Country'),
+      //     onTap: () {
+      //       Navigator.pushReplacementNamed(context, routes.countries);
+      //     }),
     ],
   ));
 }
