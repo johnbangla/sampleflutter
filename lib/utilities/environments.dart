@@ -14,7 +14,7 @@ class _Environments {
   final userLoginWithToken = '/bbhrm_app/api/User/LoginUser';
   final submit_otp_login = '/bbhrm_app/api/User/OTPSubmit';
 //Leave Module 21/11/2022
-  final my_leave_list = '/bbhrm_app/api/Leave/GetRemainingLeave/15857';
+  final my_leave_list = '/bbhrm_app/api/Leave/GetRemainingLeave';
   final my_leave_post_request = '/bbhrm_app/api/Leave/applyforleave';
   final my_leave_approve_request =
       '/bbhrm_app/api/Leave/GetRemainingLeave/15857';

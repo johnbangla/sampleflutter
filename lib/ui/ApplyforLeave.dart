@@ -586,7 +586,7 @@ class FormScreenState extends State<FormScreen> {
                     //     ApiServicesforLeaveApply();
 
                     late Future<bool> save =
-                        applyleaveinstance.createPostRequest(obj);
+                        repository .createLeaveRequest(obj);
                     // ignore: unrelated_type_equality_checks
                     if (save == true) {
                       Alert(message: 'Post successfully');

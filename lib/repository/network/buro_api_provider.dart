@@ -1023,11 +1023,13 @@ class BuroApiProvider {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
     var token = await sessionManager.token;
+    var testuserid = "/" + user;
     var leaveList;
 
     try {
       final response = await networkConfigWithToken('$token').get(
-        environments.my_leave_list,
+        //The below line will be changed it would be user
+        environments.my_leave_list + testuserid ,
       );
 
       leaveList = Leaveinfo.fromJson(response.data); //ntc
@@ -1063,7 +1065,7 @@ class BuroApiProvider {
   // }
 
 //The below code is responsible for posting Leave data to the server via api
-    Future<LeaveModel> createPostRequest(LeaveModel data) async {
+    Future<bool> createLeaveRequest(LeaveModel data) async {
     var user = await sessionManager.userID;
     var password = await sessionManager.password;
     var token = await sessionManager.token;
@@ -1079,7 +1081,7 @@ class BuroApiProvider {
       final errorMessage = DioException.fromDioError(e).toString();
       if (errorMessage == 'Authentication failed.') {
         await getToken(user, password);
-        return createPostRequest(data);
+        return createLeaveRequest(data);
       }
       throw DioException.fromDioError(e);
     }

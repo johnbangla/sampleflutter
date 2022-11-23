@@ -1,5 +1,4 @@
-
-
+import 'package:buroleave/Models/LeaveModel.dart';
 import 'package:buroleave/Models/Leaveinfo.dart';
 
 import '../models/ApprovedPlan.dart';
@@ -84,12 +83,13 @@ class BuroRepository {
     return await _provider.approvalActionAll(applicationId, actionType);
   }
 
-  Future<ApplySubmit> submitApplyList(List applyList,int planId) async {
-    return await _provider.submitApplyList(applyList,planId);
+  Future<ApplySubmit> submitApplyList(List applyList, int planId) async {
+    return await _provider.submitApplyList(applyList, planId);
   }
 
-  Future<ChangePasswordModel> changePassword(String oldPass,String newPass,String confirmPass) async {
-    return await _provider.changePassword(oldPass,newPass,confirmPass);
+  Future<ChangePasswordModel> changePassword(
+      String oldPass, String newPass, String confirmPass) async {
+    return await _provider.changePassword(oldPass, newPass, confirmPass);
   }
 
   Future<Branch> getBranchList() async {
@@ -100,7 +100,8 @@ class BuroRepository {
     return await _provider.getOtp(userId);
   }
 
-  Future<VerifyOtp> submitOtpForgotPass(String mobileOtp, String emailOtp) async {
+  Future<VerifyOtp> submitOtpForgotPass(
+      String mobileOtp, String emailOtp) async {
     return await _provider.submitOtpForgotPass(mobileOtp, emailOtp);
   }
 
@@ -108,10 +109,10 @@ class BuroRepository {
     return await _provider.getBillRequest();
   }
 
-  Future<ChangePasswordModel> resetPassword(String oldPass,String newPass,String confirmPass) async {
-    return await _provider.resetPassword(oldPass,newPass,confirmPass);
+  Future<ChangePasswordModel> resetPassword(
+      String oldPass, String newPass, String confirmPass) async {
+    return await _provider.resetPassword(oldPass, newPass, confirmPass);
   }
-
 
   Future<BillRequestDetails> getBillRequestDetails(int applicationId) async {
     return await _provider.getBillDetails(applicationId);
@@ -120,6 +121,7 @@ class BuroRepository {
   Future<BillSubmitModel> billSubmit(List billingList) async {
     return await _provider.billSubmit(billingList);
   }
+
   Future<BillDownloadInfo?> getBillDownloadInfo(int applicationId) async {
     return await _provider.getBillDownloadInfo(applicationId);
   }
@@ -136,7 +138,6 @@ class BuroRepository {
     return await _provider.getPlanDetail(planId);
   }
 
-
   Future<PlanApprovalDetailsModel> getPlanApprovalDetails(int planId) async {
     return await _provider.getPlanApprovalDetail(planId);
   }
@@ -145,21 +146,25 @@ class BuroRepository {
     return await _provider.getPlanApprovalDetail(planId);
   }*/
 
-  Future<ApprovalAction> planApprovalActionIndividual( // plan approval action from list
-      int planDetailsId, int planId, String actionType) async {
+  Future<ApprovalAction> planApprovalActionIndividual(
+      // plan approval action from list
+      int planDetailsId,
+      int planId,
+      String actionType) async {
     print('tttttttttt planDetailsID $planDetailsId planID $planId');
 
     return await _provider.planApprovalActionIndividual(
         planDetailsId, planId, actionType);
   }
 
-  Future<ApprovalAction> planApprovalActionAll( // plan approval action from details
-      int applicationId, String actionType) async {
+  Future<ApprovalAction> planApprovalActionAll(
+      // plan approval action from details
+      int applicationId,
+      String actionType) async {
     return await _provider.planApprovalActionAll(applicationId, actionType);
   }
 
-  Future<RequestCancel> cancelPlanRequestIndividual(
-      int planDetailsId) async {
+  Future<RequestCancel> cancelPlanRequestIndividual(int planDetailsId) async {
     return await _provider.cancelPlanReqIndividual(planDetailsId);
   }
 
@@ -175,16 +180,13 @@ class BuroRepository {
     return await _provider.getApprovedPlan();
   }
 
-
   Future<void> setUserData(LoginUser user) async {
     /* await setAccessToken(tokens.accessToken);
     await setRefreshToken(tokens.refreshToken);*/
   }
 
-
-  Future<UserAthenticate> getToken(String username,String password) async{
+  Future<UserAthenticate> getToken(String username, String password) async {
     return await _provider.getToken(username, password);
-
   }
 
   Future<LoginUser> authenticateWithToken(String token) async {
@@ -193,8 +195,12 @@ class BuroRepository {
 
 //Leave Data
 
-Future<Leaveinfo> getLeavetList() async {
+  Future<Leaveinfo> getLeavetList() async {
     return await _provider.getLeavetList();
+  }
+
+  Future<bool> createLeaveRequest(LeaveModel data) async {
+    return await _provider.createLeaveRequest(data);
   }
 
 //Leave data
