@@ -1,4 +1,5 @@
 import 'package:alert/alert.dart';
+import 'package:buroleave/Models/LeaveModel.dart';
 import 'package:buroleave/Models/Leaveinfo.dart';
 import 'package:buroleave/repository/database/database_handler.dart';
 import 'package:buroleave/repository/network/buro_repository.dart';
@@ -562,7 +563,44 @@ class FormScreenState extends State<FormScreen> {
                       print(
                           '$countryValue , $stateValue, $cityValue'); //Address of Leave   6
 
+                    
+                    //saving leave apply data to db
+                     // Employee = dd = Employee(id: , firstName: firstName, lastName: lastName, email: email, phone: phone, birthDate: birthDate, title: title, dept: dept)
+                    LeaveModel obj = LeaveModel(
+                        id: 20,
+                        leave_type: selectedValueforleavetype.toString(),
+                        leave_fromDate: dtrange.start.toString(),
+                        leave_toDate: dtrange.end.toString(),
+                        leave_totalDuration:
+                            (dtrange.duration.inDays + 1).toString(),
+                        leave_reasonForLeave: _resons.toString(),
+                        leave_addressAll: countryValue.toString() +
+                            "/" +
+                            stateValue.toString() +
+                            "/" +
+                            cityValue.toString()
+                        // dept: cityValue.toString()
+
+                        );
+                    // ApiServicesforLeaveApply applyleaveinstancePOST =
+                    //     ApiServicesforLeaveApply();
+
+                    late Future<bool> save =
+                        applyleaveinstance.createPostRequest(obj);
+                    // ignore: unrelated_type_equality_checks
+                    if (save == true) {
+                      Alert(message: 'Post successfully');
                     } else {
+                      Alert(message: 'Network Error');
+                    }
+                    //Send to API
+                    //saving leave apply data to db
+                    
+                    
+                    } 
+                    
+                    
+                    else {
                       print('please Accept terms and condistion');
                       Alert(message: 'please Accept terms and condistion')
                           .show();

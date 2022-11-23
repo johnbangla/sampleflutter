@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:buroleave/Models/LeaveModel.dart';
 import 'package:buroleave/Models/Leaveinfo.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_logging_interceptor/dio_logging_interceptor.dart';
@@ -1044,4 +1045,46 @@ class BuroApiProvider {
 
     return leaveList;
   }
+
+
+  //Leave data sent to db 
+ //This is For post request of Employee
+  // Future<bool> createPostRequest(LeaveModel data1) async {
+  //   final response = await http.post(
+  //     Uri.parse('$baseUrl/applyforleave/'),
+  //     headers: {"content-type": "application/json"},
+  //     body: LeaveModelToJson(data1),
+  //   );
+  //   if (response.statusCode == 200 || response.statusCode == 201) {
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // }
+
+//The below code is responsible for posting Leave data to the server via api
+    Future<LeaveModel> createPostRequest(LeaveModel data) async {
+    var user = await sessionManager.userID;
+    var password = await sessionManager.password;
+    var token = await sessionManager.token;
+
+    var submitResponse;
+
+    try {
+      final response = await networkConfigWithToken('$token')
+          .post(environments.my_leave_post_request, data: data);
+
+      submitResponse = LeaveModel.fromJson(response.data);
+    } on DioError catch (e) {
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        await getToken(user, password);
+        return createPostRequest(data);
+      }
+      throw DioException.fromDioError(e);
+    }
+
+    return submitResponse;
+  }
+  //Leave Data sent to db
 }

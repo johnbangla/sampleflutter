@@ -16,7 +16,12 @@ class _Constants{
   final KEY_TOKEN = 'token_id';
 
 
+//Leave Module
+  final KEY_APPROVAL_APPROVE_FOR_LEAVE = 'LApprove';
+  final KEY_APPROVAL_REJECT_FOR_LEAVE = 'LReject';
+  final KEY_SUPERVISOR_INFO_FOR_LEAVE = 'Lsupervisor_info';
 
+//Leave Module
 
 
 

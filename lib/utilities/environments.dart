@@ -15,6 +15,16 @@ class _Environments {
   final submit_otp_login = '/bbhrm_app/api/User/OTPSubmit';
 //Leave Module 21/11/2022
   final my_leave_list = '/bbhrm_app/api/Leave/GetRemainingLeave/15857';
+  final my_leave_post_request = '/bbhrm_app/api/Leave/applyforleave';
+  final my_leave_approve_request =
+      '/bbhrm_app/api/Leave/GetRemainingLeave/15857';
+  final my_leave_details = '/bbhrm_app/api/Leave/GetRemainingLeave/15857';
+  final my_leave_search = '/bbhrm_app/api/Leave/GetRemainingLeave/15857';
+
+  final my_leave_get_country = '/bbhrm_app/api/Leave/Getcountry/';
+  final my_leave_getstateby_country = '/bbhrm_app/api/Leave/Getstate';
+  final my_leave_getcityby_state = '/bbhrm_app/api/Leave/Getcity';
+  final my_leave_getthanaby_city = '/bbhrm_app/api/Leave/Getthana';
   // Forgot Password
   final generate_otp = '/bbhrm_app/api/User/OTP_Generate';
   final changePassForgot = '/bbhrm_app/api/User/ChangePasswordIfForgot';
