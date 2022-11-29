@@ -2,6 +2,7 @@ import 'package:alert/alert.dart';
 import 'package:buroleave/Models/LeaveModel.dart';
 import 'package:buroleave/Models/Leaveinfo.dart';
 import 'package:buroleave/Models/common_country/district.dart';
+import 'package:buroleave/Models/common_country/thana.dart';
 import 'package:buroleave/repository/database/database_handler.dart';
 import 'package:buroleave/repository/network/buro_repository.dart';
 import 'package:buroleave/sessionmanager-prev/session_manager.dart';
@@ -95,6 +96,11 @@ class FormScreenState extends State<FormScreen> {
   //For clountry Division city and Thana variable
   List<String> districtItemlist = [];
   dynamic _selectedDistrict; 
+
+  //Thana list Data
+   List<String> thanaItemlist = [];
+  dynamic _thanaitem; 
+
   // Future initialize() async {
   //   leaves = [];
   //   leaves = (await repository.getLeavetList()) as List;
@@ -159,8 +165,14 @@ class FormScreenState extends State<FormScreen> {
           })
         });
 
+      getThanaListbydistrict(_selectedDistrict).then((value) => {
+          value.data?.forEach((element) {
+          thanaItemlist.add(element.thanaName.toString() );
 
-    //getDistricListAPI();
+          //  print(element.thanaName.toString());
+          })
+        });
+  
     super.initState();
   }
 
@@ -184,6 +196,13 @@ class FormScreenState extends State<FormScreen> {
     
   }
 
+  //The below code is responsible to retrieve list of Thana by provising District Name
+    Future<Thana> getThanaListbydistrict(var district) async {
+   return await repository.getThanaListbydistrict(district);
+
+    
+  }
+
   //Loading country division city thana data from DB
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -193,27 +212,54 @@ class FormScreenState extends State<FormScreen> {
   var dropdownvalue;
 
   Widget _MyCountryDivision() {
-     return Container(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-         DropdownButton(
-      hint: Text('Choose District'), // Not necessary for Option 1
-      value: _selectedDistrict,
-      onChanged: (newValue) {
-        setState(() {
-        _selectedDistrict = newValue.toString();
+     return Column(
+       mainAxisAlignment: MainAxisAlignment.center,
+       children: [
+        DropdownButton(
+     hint: const Text('Choose District'), // Not necessary for Option 1
+     value: _selectedDistrict,
+     onChanged: (newValue) {
+       setState(() {
+       _selectedDistrict = newValue.toString();
+
+//testing for cascasde dropdown by using API 29/11/2022
+getThanaListbydistrict(_selectedDistrict).then((value) => {
+          value.data?.forEach((element) {
+          thanaItemlist.add(element.thanaName.toString() );
+
+         //   print(element.thanaName.toString());
+          })
         });
-      },
-      items: districtItemlist.map((district) {
-        return DropdownMenuItem(
-          child: new Text(district, overflow: TextOverflow.visible),
-          value: district,
-        );
-      }).toList(),
+
+//testing
+
+
+
+       });
+     },
+     items: districtItemlist.map((district) {
+       return DropdownMenuItem(
+         value: district,
+         child: Text(district, overflow: TextOverflow.visible),
+       );
+     }).toList(),
     ),
-        ],
-      ),
+     DropdownButton(
+     hint: const Text('Choose Thana'), // Not necessary for Option 1
+     value: _thanaitem,
+     onChanged: (newValue) {
+       setState(() {
+       _thanaitem = newValue.toString();
+       });
+     },
+     items: thanaItemlist.map((thana) {
+       return DropdownMenuItem(
+         value: thana,
+         child: Text(thana, overflow: TextOverflow.visible),
+       );
+     }).toList(),
+    ),
+       ],
      );
   }
 

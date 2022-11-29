@@ -1,26 +1,53 @@
 class Thana {
-    Thana({
-       required this.id,
-        required this.thanaName,
-       required this.districtId,
-    });
+  bool? success;
+  String? messageEn;
+  String? messageBn;
+  List<Data>? data;
 
-    final int id;
-    final String thanaName;
-    final int districtId;
+  Thana({this.success, this.messageEn, this.messageBn, this.data});
 
-    factory Thana.fromJson(Map<String, dynamic> json){ 
-        return Thana(
-        id: json["id"] ,
-        thanaName: json["thanaName"] ,
-        districtId: json["districtId"] ,
-    );
+  Thana.fromJson(Map<String, dynamic> json) {
+    success = json['success'];
+    messageEn = json['messageEn'];
+    messageBn = json['messageBn'];
+    if (json['data'] != null) {
+      data = <Data>[];
+      json['data'].forEach((v) {
+        data!.add(new Data.fromJson(v));
+      });
     }
+  }
 
-    Map<String, dynamic> toJson() => {
-        "id": id,
-        "thanaName": thanaName,
-        "districtId": districtId,
-    };
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['success'] = this.success;
+    data['messageEn'] = this.messageEn;
+    data['messageBn'] = this.messageBn;
+    if (this.data != null) {
+      data['data'] = this.data!.map((v) => v.toJson()).toList();
+    }
+    return data;
+  }
+}
 
+class Data {
+  int? id;
+  String? thanaName;
+  int? districtId;
+
+  Data({this.id, this.thanaName, this.districtId});
+
+  Data.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    thanaName = json['thanaName'];
+    districtId = json['districtId'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['thanaName'] = this.thanaName;
+    data['districtId'] = this.districtId;
+    return data;
+  }
 }
