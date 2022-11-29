@@ -1,14 +1,15 @@
 import 'package:alert/alert.dart';
 import 'package:buroleave/Models/LeaveModel.dart';
 import 'package:buroleave/Models/Leaveinfo.dart';
+import 'package:buroleave/Models/common_country/district.dart';
 import 'package:buroleave/repository/database/database_handler.dart';
 import 'package:buroleave/repository/network/buro_repository.dart';
 import 'package:buroleave/sessionmanager-prev/session_manager.dart';
 import 'package:buroleave/theme/colors.dart';
 import 'package:buroleave/theme/styles.dart';
-import 'package:buroleave/ui/MyCalendar.dart';
-import 'package:buroleave/ui/createDrawer.dart';
-import 'package:buroleave/ui/mycountry.dart';
+import 'package:buroleave/LeaveModuleUserInterface/MyCalendar.dart';
+import 'package:buroleave/LeaveModuleUserInterface/createDrawer.dart';
+import 'package:buroleave/LeaveModuleUserInterface/mycountry.dart';
 import 'package:country_state_city_picker/country_state_city_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dropdown/flutter_dropdown.dart';
@@ -89,8 +90,11 @@ class FormScreenState extends State<FormScreen> {
   List leaves = [];
   List<String> myleavelist = [];
   dynamic _selectedLeave; // Option 2
-  // PopularMovieService service = PopularMovieService();
+
   var repository = BuroRepository();
+  //For clountry Division city and Thana variable
+  List<String> districtItemlist = [];
+  dynamic _selectedDistrict; 
   // Future initialize() async {
   //   leaves = [];
   //   leaves = (await repository.getLeavetList()) as List;
@@ -146,6 +150,17 @@ class FormScreenState extends State<FormScreen> {
     //     });
 
     // initialize();
+
+      getDistricListAPI().then((value) => {
+          value.data?.forEach((element) {
+          districtItemlist.add(element.districtName.toString() );
+
+            // print(element.leaveTypeName +"Remaining " + element.remaining.toString());
+          })
+        });
+
+
+    //getDistricListAPI();
     super.initState();
   }
 
@@ -162,19 +177,45 @@ class FormScreenState extends State<FormScreen> {
     return await repository.getLeavetList();
   }
 
+  //Loading country division city thana data from DB
+  Future<District> getDistricListAPI() async {
+   return await repository.getDistricttList();
+
+    
+  }
+
+  //Loading country division city thana data from DB
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // Widget _Testdropdown() {
-  //   return DropDown(
-  //     items: myleavelist,
-  //     hint: Text(myleavelist[0]),
-  //     icon: Icon(
-  //       Icons.expand_more,
-  //       color: Colors.blue,
-  //     ),
-  //     onChanged: print,
-  //   );
-  // }
+  //Country
+  //State city and thana
+
+  var dropdownvalue;
+
+  Widget _MyCountryDivision() {
+     return Container(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+         DropdownButton(
+      hint: Text('Choose District'), // Not necessary for Option 1
+      value: _selectedDistrict,
+      onChanged: (newValue) {
+        setState(() {
+        _selectedDistrict = newValue.toString();
+        });
+      },
+      items: districtItemlist.map((district) {
+        return DropdownMenuItem(
+          child: new Text(district, overflow: TextOverflow.visible),
+          value: district,
+        );
+      }).toList(),
+    ),
+        ],
+      ),
+     );
+  }
 
   Widget _buildinitialLeavetype() {
     return DropdownButton(
@@ -400,8 +441,8 @@ class FormScreenState extends State<FormScreen> {
           return 'Leave Reason is Required';
         }
 
-      //   return null;
-       },
+        //   return null;
+      },
       onSaved: (String? value) {
         _resons = value;
       },
@@ -522,7 +563,8 @@ class FormScreenState extends State<FormScreen> {
                 _buildReasons(),
                 // _buildDepartnamename(),
                 // _buildDropdowndownforDelegateuserlist(),
-                _builderStateCity(),
+                _MyCountryDivision(),
+                //_builderStateCity(),
                 _buildcheckterms(),
 
                 // _buildPassword(),
@@ -545,7 +587,7 @@ class FormScreenState extends State<FormScreen> {
 
                       //Six fields are manadatory for tracking leave info .
                       print(selectedValueforleavetype); //Leave type  1
-                    //  print(_ramainday); //from db        //no  need save
+                      //  print(_ramainday); //from db        //no  need save
                       //  To convert int from string value
                       int intValue = int.parse(selectedValueforleavetype!
                           .replaceAll(RegExp('[^0-9]'), ''));
@@ -563,44 +605,39 @@ class FormScreenState extends State<FormScreen> {
                       print(
                           '$countryValue , $stateValue, $cityValue'); //Address of Leave   6
 
-                    
-                    //saving leave apply data to db
-                     // Employee = dd = Employee(id: , firstName: firstName, lastName: lastName, email: email, phone: phone, birthDate: birthDate, title: title, dept: dept)
-                    LeaveModel obj = LeaveModel(
-                        id: 20,
-                        leave_type: selectedValueforleavetype.toString(),
-                        leave_fromDate: dtrange.start.toString(),
-                        leave_toDate: dtrange.end.toString(),
-                        leave_totalDuration:
-                            (dtrange.duration.inDays + 1).toString(),
-                        leave_reasonForLeave: _resons.toString(),
-                        leave_addressAll: countryValue.toString() +
-                            "/" +
-                            stateValue.toString() +
-                            "/" +
-                            cityValue.toString()
-                        // dept: cityValue.toString()
+                      //saving leave apply data to db
+                      // Employee = dd = Employee(id: , firstName: firstName, lastName: lastName, email: email, phone: phone, birthDate: birthDate, title: title, dept: dept)
+                      LeaveModel obj = LeaveModel(
+                          id: 20,
+                          leave_type: selectedValueforleavetype.toString(),
+                          leave_fromDate: dtrange.start.toString(),
+                          leave_toDate: dtrange.end.toString(),
+                          leave_totalDuration:
+                              (dtrange.duration.inDays + 1).toString(),
+                          leave_reasonForLeave: _resons.toString(),
+                          leave_addressAll: countryValue.toString() +
+                              "/" +
+                              stateValue.toString() +
+                              "/" +
+                              cityValue.toString()
+                          // dept: cityValue.toString()
 
-                        );
-                    // ApiServicesforLeaveApply applyleaveinstancePOST =
-                    //     ApiServicesforLeaveApply();
+                          );
+                      // ApiServicesforLeaveApply applyleaveinstancePOST =
+                      //     ApiServicesforLeaveApply();
 
-                    late Future<bool> save =
-                        repository .createLeaveRequest(obj);
-                    // ignore: unrelated_type_equality_checks
-                    if (save == true) {
-                      Alert(message: 'Post successfully');
+                      late Future<bool> save =
+                          repository.createLeaveRequest(obj);
+                      // ignore: unrelated_type_equality_checks
+                      if (save == true) {
+                        Alert(message: 'Post successfully');
+                      } else {
+                        Alert(message: 'Network Error');
+                      }
+                      //Send to API
+                      //saving leave apply data to db
+
                     } else {
-                      Alert(message: 'Network Error');
-                    }
-                    //Send to API
-                    //saving leave apply data to db
-                    
-                    
-                    } 
-                    
-                    
-                    else {
                       print('please Accept terms and condistion');
                       Alert(message: 'please Accept terms and condistion')
                           .show();

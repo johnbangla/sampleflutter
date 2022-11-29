@@ -1,5 +1,7 @@
 import 'package:buroleave/Models/LeaveModel.dart';
 import 'package:buroleave/Models/Leaveinfo.dart';
+import 'package:buroleave/Models/common_country/district.dart';
+import 'package:buroleave/Models/common_country/thana.dart';
 
 import '../models/ApprovedPlan.dart';
 import '../models/apply_submit.dart';
@@ -204,4 +206,24 @@ class BuroRepository {
   }
 
 //Leave data
+
+
+//country division district thana  28/11/2022
+//  Future<country> getCountryList() async {
+//     return await _provider.getCountryList();
+//   }
+//   Future<division> getDivisionListBycountry(var country) async {
+//     return await _provider.getDivisionListBycountry(country);
+//   }
+ Future<District> getDistricttList() async {
+    return await _provider.getDistricttList();
+  }
+Future<Thana> getThanaListbydistrict(var district) async {
+    return await _provider.getThanaListbydistrict(district);
+  }
+ 
+ 
+ 
+
+//country division district thana
 }

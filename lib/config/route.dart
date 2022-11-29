@@ -29,7 +29,7 @@ import '../views/login/login_screen.dart';
 import '../views/login/login_verification.dart';
 import '../views/login/reset_password.dart';
 import '../views/login/splash_screen.dart';
-import '../ui//ApplyforLeave.dart';
+import '../LeaveModuleUserInterface/ApplyforLeave.dart';
 
 class AppRouter {
   Route? onGenerateRoute(RouteSettings routeSettings) {

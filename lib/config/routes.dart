@@ -1,7 +1,7 @@
-import '../ui/leavePredictionView.dart';
-import '../ui/ReportsView.dart';
-import '../ui/leaveHistory.dart';
-import '../ui/ApplyforLeave.dart';
+import '../LeaveModuleUserInterface/leavePredictionView.dart';
+import '../LeaveModuleUserInterface/ReportsView.dart';
+import '../LeaveModuleUserInterface/leaveHistory.dart';
+import '../LeaveModuleUserInterface/ApplyforLeave.dart';
 import '../Pages/list_data.dart';
 import '../Pages/list_country.dart';
 

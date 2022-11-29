@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:buroleave/Models/LeaveModel.dart';
 import 'package:buroleave/Models/Leaveinfo.dart';
+import 'package:buroleave/Models/common_country/district.dart';
+import 'package:buroleave/Models/common_country/thana.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_logging_interceptor/dio_logging_interceptor.dart';
 
@@ -1089,4 +1091,124 @@ class BuroApiProvider {
     return submitResponse;
   }
   //Leave Data sent to db
+
+  // common country division district thana
+//  Future<District> getDistricttList() async {
+    
+//   }
+
+//The below code is responsible for fetching country list 
+//  Future<Country> getCountrytList() async {
+//     var user = await sessionManager.userID;
+//     var password = await sessionManager.password;
+//     var token = await sessionManager.token;
+//     var requestList;
+
+//     try {
+//       final response = await networkConfigWithToken('$token').get(
+//         environments.my_leave_get_country,
+//       );
+
+//       requestList = Country.fromJson(response.data);
+//     } on DioError catch (e) {
+//       print('Get Sub Module on error');
+//       final errorMessage = DioException.fromDioError(e).toString();
+//       if (errorMessage == 'Authentication failed.') {
+//         print('Authentication failed error');
+//         await getToken(user, password);
+//         return  getCountrytList();
+//       }
+//       throw DioException.fromDioError(e);
+//     }
+
+//     return requestList;
+//   }
+//The below code is responsible for fetching country list 
+
+//The below code is responsible for fetching division list 
+//  Future<Division> getDivisionListBycountry(var country) async {
+//     var user = await sessionManager.userID;
+//     var password = await sessionManager.password;
+//     var token = await sessionManager.token;
+//     var requestList;
+
+//     try {
+//       final response = await networkConfigWithToken('$token').get(
+//         environments.my_leave_getdivisionby_country,
+//       );
+
+//       requestList = Division.fromJson(response.data);
+//     } on DioError catch (e) {
+//       print('Get Sub Module on error');
+//       final errorMessage = DioException.fromDioError(e).toString();
+//       if (errorMessage == 'Authentication failed.') {
+//         print('Authentication failed error');
+//         await getToken(user, password);
+//         return  getDivisiontList();
+//       }
+//       throw DioException.fromDioError(e);
+//     }
+
+//     return requestList;
+//   }
+//The below code is responsible for fetching division list 
+
+
+//The below code is responsible to fetch district by division
+    Future<District> getDistricttList() async {
+    var user = await sessionManager.userID;
+    var password = await sessionManager.password;
+    var token = await sessionManager.token;
+    var requestList;
+
+    try {
+      final response = await networkConfigWithToken('$token').get(
+        environments.my_leave_getdistrict_bydivision,
+      );
+
+      requestList = District.fromJson(response.data);
+    } on DioError catch (e) {
+      print('Get Sub Module on error');
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        print('Authentication failed error');
+        await getToken(user, password);
+        return  getDistricttList();
+      }
+      throw DioException.fromDioError(e);
+    }
+
+    return requestList;
+  }
+// Future<Thana> getThanaListbydistrict() async {
+   
+//   }
+//The below code is responsible for fetching thana by providing District
+ Future<Thana> getThanaListbydistrict(var district) async {
+    var user = await sessionManager.userID;
+    var password = await sessionManager.password;
+    var token = await sessionManager.token;
+    var requestList;
+     var districtname = "/" + district;
+
+    try {
+      final response = await networkConfigWithToken('$token').get(
+        environments.my_leave_getthanaby_city + districtname,
+      );
+
+      requestList = Thana.fromJson(response.data);
+    } on DioError catch (e) {
+      print('Get Sub Module on error');
+      final errorMessage = DioException.fromDioError(e).toString();
+      if (errorMessage == 'Authentication failed.') {
+        print('Authentication failed error');
+        await getToken(user, password);
+        return  getThanaListbydistrict(districtname);
+      }
+      throw DioException.fromDioError(e);
+    }
+
+    return requestList;
+  }
+  //common 
 }

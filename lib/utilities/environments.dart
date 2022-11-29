@@ -16,15 +16,19 @@ class _Environments {
 //Leave Module 21/11/2022
   final my_leave_list = '/bbhrm_app/api/Leave/GetRemainingLeave';
   final my_leave_post_request = '/bbhrm_app/api/Leave/applyforleave';
+//expecting 'http://localhost:8089/leaves/leave_type/Leave without Pay';
+//addedd on 27/11/2022
+  final my_leave_report_bytype = 'http://localhost:8089/leaves'; //testing
   final my_leave_approve_request =
       '/bbhrm_app/api/Leave/GetRemainingLeave/15857';
   final my_leave_details = '/bbhrm_app/api/Leave/GetRemainingLeave/15857';
   final my_leave_search = '/bbhrm_app/api/Leave/GetRemainingLeave/15857';
 
   final my_leave_get_country = '/bbhrm_app/api/Leave/Getcountry/';
-  final my_leave_getstateby_country = '/bbhrm_app/api/Leave/Getstate';
-  final my_leave_getcityby_state = '/bbhrm_app/api/Leave/Getcity';
-  final my_leave_getthanaby_city = '/bbhrm_app/api/Leave/Getthana';
+  final my_leave_getdivisionby_country = '/bbhrm_app/api/Leave/Getstate';
+  //Added on 28/11/2022
+  final my_leave_getdistrict_bydivision = '/bbhrm_app/api/BasicData/DistrictList';  //currently returning only district it should be by division
+  final my_leave_getthanaby_city = '/bbhrm_app/api/BasicData/ThanaList';  //Return Thana list by district
   // Forgot Password
   final generate_otp = '/bbhrm_app/api/User/OTP_Generate';
   final changePassForgot = '/bbhrm_app/api/User/ChangePasswordIfForgot';

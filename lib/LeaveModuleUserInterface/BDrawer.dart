@@ -1,4 +1,4 @@
-import 'package:buroleave/ui/ApplyforLeave.dart';
+
 import 'package:flutter/material.dart';
 
 class BDrawer extends StatelessWidget {
@@ -37,7 +37,7 @@ class BDrawer extends StatelessWidget {
               },
             ),
             ListTile(
-              title: const Text('Report'),
+              title: const Text('Main Menu'),
               onTap: () {
                 // Update the state of the app
                 // ...
