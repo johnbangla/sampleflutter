@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:alert/alert.dart';
 import 'package:buroleave/Models/LeaveModel.dart';
 import 'package:buroleave/Models/Leaveinfo.dart';
+import 'package:buroleave/Models/common_country/city.dart';
 import 'package:buroleave/Models/common_country/district.dart';
 import 'package:buroleave/Models/common_country/thana.dart';
 import 'package:buroleave/repository/database/database_handler.dart';
@@ -12,15 +15,20 @@ import 'package:buroleave/LeaveModuleUserInterface/MyCalendar.dart';
 import 'package:buroleave/LeaveModuleUserInterface/createDrawer.dart';
 import 'package:buroleave/LeaveModuleUserInterface/mycountry.dart';
 import 'package:country_state_city_picker/country_state_city_picker.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dropdown/flutter_dropdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
+import '../Models/common_country/province.dart';
+import 'package:http/http.dart' as http;
+
 //Class start here
 
 class FormScreen extends StatefulWidget {
+
   static const String routeName = '/applyleave';
   static route() => MaterialPageRoute(builder: (_) => FormScreen());
 
@@ -95,34 +103,26 @@ class FormScreenState extends State<FormScreen> {
   var repository = BuroRepository();
   //For clountry Division city and Thana variable
   List<String> districtItemlist = [];
-  dynamic _selectedDistrict; 
+  dynamic _selectedDistrict;
 
   //Thana list Data
-   List<String> thanaItemlist = [];
-  dynamic _thanaitem; 
+  List<String> thanaItemlist = [];
+  dynamic _thanaitem;
 
-  // Future initialize() async {
-  //   leaves = [];
-  //   leaves = (await repository.getLeavetList()) as List;
-  //   print(leaves);
-  //   setState(() {
-  //     leaveCount = leaves.length;
-  //     leaves = leaves;
-  //   });
-  // }
 
-  // @override
-  // void initState() {
-  //   service = PopularMovieService();
-  //   initialize();
-  //   super.initState();
-  // }
 
+//for country state city
+  String? idProv;
+  String? idKab;
+  String? idKec;
+//for country state city
 //R & D
   @override
   // Future<void> initState() async {
   void initState() {
     sessionManager = SessionManager();
+
+    
     this.handler = DataBaseHandler();
     getSuperVisorInfo().then((value) => {
           supervisorName = value,
@@ -157,28 +157,31 @@ class FormScreenState extends State<FormScreen> {
 
     // initialize();
 
-      getDistricListAPI().then((value) => {
+    getDistricListAPI().then((value) => {
           value.data?.forEach((element) {
-          districtItemlist.add(element.districtName.toString() );
+            districtItemlist.add(element.districtName.toString());
 
             // print(element.leaveTypeName +"Remaining " + element.remaining.toString());
           })
         });
 
-      getThanaListbydistrict(_selectedDistrict).then((value) => {
+    getThanaListbydistrict(_selectedDistrict).then((value) => {
           value.data?.forEach((element) {
-          thanaItemlist.add(element.thanaName.toString() );
+            thanaItemlist.add(element.thanaName.toString());
 
-          //  print(element.thanaName.toString());
+            //  print(element.thanaName.toString());
           })
         });
-  
+
     super.initState();
   }
 
   Future<String> getSelectedLang() async {
     return await sessionManager.selectedLang;
   }
+
+
+
 
   Future<String> getSuperVisorInfo() async {
     return await sessionManager.supervisorInfo;
@@ -191,16 +194,12 @@ class FormScreenState extends State<FormScreen> {
 
   //Loading country division city thana data from DB
   Future<District> getDistricListAPI() async {
-   return await repository.getDistricttList();
-
-    
+    return await repository.getDistricttList();
   }
 
   //The below code is responsible to retrieve list of Thana by provising District Name
-    Future<Thana> getThanaListbydistrict(var district) async {
-   return await repository.getThanaListbydistrict(district);
-
-    
+  Future<Thana> getThanaListbydistrict(var district) async {
+    return await repository.getThanaListbydistrict(district);
   }
 
   //Loading country division city thana data from DB
@@ -210,57 +209,124 @@ class FormScreenState extends State<FormScreen> {
   //State city and thana
 
   var dropdownvalue;
+  var dropdownthanavalue;
 
   Widget _MyCountryDivision() {
-     return Column(
-       mainAxisAlignment: MainAxisAlignment.center,
-       children: [
-        DropdownButton(
-     hint: const Text('Choose District'), // Not necessary for Option 1
-     value: _selectedDistrict,
-     onChanged: (newValue) {
-       setState(() {
-       _selectedDistrict = newValue.toString();
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        FutureBuilder<District>(
+          future: getDistricListAPI(),
+          builder: (context, snapshot) {
+            // if (snapshot.hasData) {
+            //   var data = snapshot.data!;
+            return DropdownButton(
+              // Initial Value
+              value: dropdownvalue,
 
-//testing for cascasde dropdown by using API 29/11/2022
-getThanaListbydistrict(_selectedDistrict).then((value) => {
-          value.data?.forEach((element) {
-          thanaItemlist.add(element.thanaName.toString() );
+              // Down Arrow Icon
+              icon: const Icon(Icons.keyboard_arrow_down),
 
-         //   print(element.thanaName.toString());
-          })
-        });
+              // Array list of items
+              items: districtItemlist.map((String items) {
+                return DropdownMenuItem(
+                  value: items,
+                  child: Text(items),
+                );
+              }).toList(),
+              // After selecting the desired option,it will
+              // change button value to selected value
+              onChanged: (newValue) {
+                setState(() {
+                  dropdownvalue = newValue!;
+                });
+                getThanaListbydistrict(newValue.toString());
+              },
+            );
+            //}
 
-//testing
+            // else {
+            //   return const CircularProgressIndicator();
+            // }
+          },
+        ),
 
+        FutureBuilder<Thana>(
+          future: getThanaListbydistrict('Bandarban'),
+          builder: (context, snapshot) {
+            // if (snapshot.hasData) {
+            //   var data = snapshot.data!;
+            return DropdownButton(
+              // Initial Value
+              value: dropdownthanavalue,
 
+              // Down Arrow Icon
+              icon: const Icon(Icons.keyboard_arrow_down),
 
-       });
-     },
-     items: districtItemlist.map((district) {
-       return DropdownMenuItem(
-         value: district,
-         child: Text(district, overflow: TextOverflow.visible),
-       );
-     }).toList(),
-    ),
-     DropdownButton(
-     hint: const Text('Choose Thana'), // Not necessary for Option 1
-     value: _thanaitem,
-     onChanged: (newValue) {
-       setState(() {
-       _thanaitem = newValue.toString();
-       });
-     },
-     items: thanaItemlist.map((thana) {
-       return DropdownMenuItem(
-         value: thana,
-         child: Text(thana, overflow: TextOverflow.visible),
-       );
-     }).toList(),
-    ),
-       ],
-     );
+              // Array list of items
+              items: thanaItemlist.map((String items) {
+                return DropdownMenuItem(
+                  value: items,
+                  child: Text(items),
+                );
+              }).toList(),
+              // After selecting the desired option,it will
+              // change button value to selected value
+              onChanged: (newValue) {
+                setState(() {
+                  dropdownthanavalue = newValue!;
+                });
+              },
+            );
+            // }
+            // else {
+            //   return const CircularProgressIndicator();
+            // }
+          },
+        ),
+
+//         DropdownButton(
+//      hint: const Text('Choose District'), // Not necessary for Option 1
+//      value: _selectedDistrict,
+//      onChanged: (newValue) {
+//        setState(() {
+//        _selectedDistrict = newValue.toString();
+
+// //testing for cascasde dropdown by using API 29/11/2022
+// getThanaListbydistrict(_selectedDistrict).then((value) => {
+//           value.data?.forEach((element) {
+//           thanaItemlist.add(element.thanaName.toString() );
+
+//           })
+//         });
+
+//        });
+//      },
+//      items: districtItemlist.map((district) {
+//        return DropdownMenuItem(
+//          value: district,
+//          child: Text(district, overflow: TextOverflow.visible),
+//        );
+//      }).toList(),
+//     ),
+
+        //  DropdownButton(
+        //  hint: const Text('Choose Thana'), // Not necessary for Option 1
+        //  value: _thanaitem,
+        //  onChanged: (newValue) {
+        //    setState(() {
+        //    _thanaitem = newValue.toString();
+        //    });
+        //  },
+        //  items: thanaItemlist.map((thana) {
+        //    return DropdownMenuItem(
+        //      value: thana,
+        //      child: Text(thana, overflow: TextOverflow.visible),
+        //    );
+        //  }).toList(),
+        // ),
+      ],
+    );
   }
 
   Widget _buildinitialLeavetype() {
@@ -569,6 +635,415 @@ getThanaListbydistrict(_selectedDistrict).then((value) => {
     //     child: Text(' Check'));
   }
 
+//Final working depenedent dropdown
+
+  Widget _country_division_district_city() {
+   
+    return SingleChildScrollView(
+      child: Container(
+        margin: EdgeInsets.all(30),
+        height: 435,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(
+            Radius.circular(10),
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              color: Colors.amber,
+              height: 70,
+              margin: EdgeInsets.only(top: 50),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 50),
+                        child: Text("Code"),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 4,
+                    child: Container(),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Container(),
+                  ),
+                  Expanded(
+                    flex: 4,
+                    child: Container(),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              color: Colors.amberAccent,
+              height: 70,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      padding: EdgeInsets.only(left: 50),
+                      child: Text("Country"),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          top: 13,
+                          bottom: 13,
+                          right: 30,
+                        ),
+                        child: DropdownSearch(
+                          dropdownSearchDecoration: InputDecoration(
+                            contentPadding: EdgeInsets.only(left: 15),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10),
+                              ),
+                            ),
+                          ),
+                          mode: Mode.MENU,
+                          items: ["Bangladesh"],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      padding: EdgeInsets.only(left: 50),
+                      child: Text("Division"),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          top: 13,
+                          bottom: 13,
+                          right: 30,
+                        ),
+                        child: DropdownSearch<Province>(
+                          dropdownSearchDecoration: InputDecoration(
+                            contentPadding: EdgeInsets.only(left: 15),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10),
+                              ),
+                            ),
+                          ),
+                          mode: Mode.MENU,
+                          // showSearchBox: true,
+                          onChanged: (value) =>
+                              idProv = value?.divisionCode.toString(),
+                          dropdownBuilder: (context, selectedItem) =>
+                              Text(selectedItem?.name ?? ""),
+                          popupItemBuilder: (context, item, isSelected) =>
+                              ListTile(
+                            title: Text(item.name),
+                          ),
+                          onFind: (text) async {
+                            var response = await http.get(
+                                Uri.parse(
+                                    "http://192.168.1.14/bbhrm_app/api/BasicData/DivisionList"),
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Accept': 'application/json',
+                                  'Authorization': 'Bearer $token',
+                                });
+                            if (response.statusCode != 200) {
+                              return [];
+                            }
+                            List allProvince = (json.decode(response.body)
+                                as Map<String, dynamic>)["data"];
+                            List<Province> allModelProvince = [];
+                            allProvince.forEach((element) {
+                              allModelProvince.add(
+                                Province(
+                                    id: element["id"].toString(),
+                                    name: element["divisionName"],
+                                    divisionCode: element["divisionCode"]),
+                              );
+                            });
+                            return allModelProvince;
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              color: Colors.amber,
+              height: 70,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      padding: EdgeInsets.only(left: 50),
+                      child: Text("District"),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          top: 13,
+                          bottom: 13,
+                          right: 30,
+                        ),
+                        child: DropdownSearch<City>(
+                          dropdownSearchDecoration: InputDecoration(
+                            contentPadding: EdgeInsets.only(left: 15),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10),
+                              ),
+                            ),
+                          ),
+                          mode: Mode.MENU,
+                          // showSearchBox: true,
+                          onChanged: (value) => idKab = value?.idProvinsi,
+                          dropdownBuilder: (context, selectedItem) =>
+                              Text(selectedItem?.name ?? ""),
+                          popupItemBuilder: (context, item, isSelected) =>
+                              ListTile(
+                            title: Text(item.name),
+                          ),
+                          onFind: (text) async {
+                            var response = await http.get(
+                                Uri.parse(
+                                    "http://192.168.1.14/bbhrm_app/api/BasicData/DistrictList/$idProv"),
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Accept': 'application/json',
+                                  'Authorization': 'Bearer $token',
+                                });
+                            if (response.statusCode != 200) {
+                              return [];
+                            }
+                            List allCity = (json.decode(response.body)
+                                as Map<String, dynamic>)["data"];
+                            List<City> allModelCity = [];
+                            allCity.forEach((element) {
+                              allModelCity.add(
+                                City(
+                                    id: element['id'].toString(),
+                                    idProvinsi:
+                                        element['districtCode'].toString(),
+                                    name: element['districtName'].toString(),
+                                    divisionId:
+                                        element['divisionId'].toString()),
+                              );
+                            });
+                            return allModelCity;
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      padding: EdgeInsets.only(left: 50),
+                      child: Text("Thana"),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          top: 13,
+                          bottom: 13,
+                          right: 30,
+                        ),
+                        child: DropdownSearch<District>(
+                          // dropdownDecoratorProps: DropDownDecoratorProps(
+                          dropdownSearchDecoration: InputDecoration(
+                            contentPadding: EdgeInsets.only(left: 15),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10),
+                              ),
+                            ),
+                          ),
+                          // ),
+                          mode: Mode.MENU,
+                          // showSearchBox: true,
+                          // onChanged: (value) => idKec = value?.id,
+                          dropdownBuilder: (context, selectedItem) =>
+                              Text(selectedItem?.name ?? ""),
+                          popupItemBuilder: (context, item, isSelected) =>
+                              ListTile(
+                            title: Text(item.name),
+                          ),
+                          onFind: (text) async {
+                            var response = await http.get(
+                                Uri.parse(
+                                    "http://192.168.1.14/bbhrm_app/api/BasicData/ThanaList/$idKab"),
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Accept': 'application/json',
+                                  'Authorization': 'Bearer $token',
+                                });
+                            if (response.statusCode != 200) {
+                              return [];
+                            }
+                            List allDistrict = (json.decode(response.body)
+                                as Map<String, dynamic>)["data"];
+                            List<District> allModelDistrict = [];
+                            allDistrict.forEach((element) {
+                              allModelDistrict.add(
+                                District(
+                                  id: element["id"].toString(),
+                                  idKabupaten: element["districtId"]
+                                      .toString(), //city id
+                                  name: element["thanaName"],
+                                ),
+                              );
+                            });
+                            return allModelDistrict;
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              color: Colors.amberAccent,
+              height: 70,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      padding: EdgeInsets.only(left: 50),
+                      child: Text("Village"),
+                    ),
+                  ),
+                  // Expanded(
+                  //   flex: 5,
+                  //   child: Container(
+                  //     padding: EdgeInsets.only(
+                  //       right: 30,
+                  //       top: 13,
+                  //       bottom: 13,
+                  //     ),
+                  //     child: DropdownSearch<Village>(
+                  //       dropdownSearchDecoration: InputDecoration(
+                  //         contentPadding: EdgeInsets.only(left: 15),
+                  //         border: OutlineInputBorder(
+                  //           borderRadius: BorderRadius.all(
+                  //             Radius.circular(10),
+                  //           ),
+                  //         ),
+                  //       ),
+                  //       mode: Mode.MENU,
+                  //       // showSearchBox: true,
+                  //       onChanged: (value) => print(value?.toJson()),
+                  //       dropdownBuilder: (context, selectedItem) =>
+                  //           Text(selectedItem?.name ?? ""),
+                  //       popupItemBuilder: (context, item, isSelected) =>
+                  //           ListTile(
+                  //         title: Text(item.name),
+                  //       ),
+                  //       onFind: (text) async {
+                  //         var response = await http.get(Uri.parse(
+                  //             "https://api.binderbyte.com/wilayah/kelurahan?api_key=$apiKey&id_kecamatan=$idKec"));
+                  //         if (response.statusCode != 200) {
+                  //           return [];
+                  //         }
+                  //         List allVillage = (json.decode(response.body)
+                  //             as Map<String, dynamic>)["value"];
+                  //         List<Village> allModelVillage = [];
+                  //         allVillage.forEach((element) {
+                  //           allModelVillage.add(
+                  //             Village(
+                  //               id: element["id"],
+                  //               idKecamatan: element["id_kecamatan"],
+                  //               name: element["name"],
+                  //             ),
+                  //           );
+                  //         });
+                  //         return allModelVillage;
+                  //       },
+                  //     ),
+                  //   ),
+                  // ),
+                  Expanded(
+                    flex: 2,
+                    child: Container(),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Container(),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 30),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 130,
+                  height: 40,
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(Colors.amber),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18.0),
+                        ),
+                      ),
+                    ),
+                    onPressed: () {},
+                    child: Icon(Icons.search),
+                  ),
+                ),
+                SizedBox(width: 15),
+                SizedBox(
+                  width: 130,
+                  height: 40,
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(Colors.amber),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18.0),
+                        ),
+                      ),
+                    ),
+                    onPressed: () {},
+                    child: Icon(Icons.add),
+                  ),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+//Final Working Depenedent Dropdown
+
 //For  check box
 
   Widget _buildcheckterms() {
@@ -609,7 +1084,7 @@ getThanaListbydistrict(_selectedDistrict).then((value) => {
                 _buildReasons(),
                 // _buildDepartnamename(),
                 // _buildDropdowndownforDelegateuserlist(),
-                _MyCountryDivision(),
+                // _MyCountryDivision(),
                 //_builderStateCity(),
                 _buildcheckterms(),
 
